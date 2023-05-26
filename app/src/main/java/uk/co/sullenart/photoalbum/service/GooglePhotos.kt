@@ -11,7 +11,9 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import uk.co.sullenart.photoalbum.Album
 
-class GooglePhotos {
+class GooglePhotos(
+    private val interceptor: AuthInterceptor,
+) {
     @Serializable
     private data class AlbumsResponse(
         val albums: List<Album>
@@ -32,7 +34,7 @@ class GooglePhotos {
 
     private val service: Service by lazy {
         val client = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor)
+            .addInterceptor(interceptor)
             .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
             .build()
         val contentType = "application/json".toMediaType()

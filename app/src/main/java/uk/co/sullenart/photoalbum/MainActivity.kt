@@ -9,50 +9,36 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
+import uk.co.sullenart.photoalbum.sign_in.SignInScreen
 import uk.co.sullenart.photoalbum.ui.theme.PhotoAlbumTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val viewModel = PhotosViewModel()
-
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestServerAuthCode("623200176730-43pm5mfljjfj5unb63m75tdhhlt2jcdt.apps.googleusercontent.com", true)
-            .requestScopes(Scope("https://www.googleapis.com/auth/photoslibrary.readonly"))
-            .build()
-        val client = GoogleSignIn.getClient(this, gso)
-
         setContent {
-            val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-                val account: GoogleSignInAccount = GoogleSignIn.getSignedInAccountFromIntent(it.data).result
-                val authCode = account.serverAuthCode ?: ""
-                viewModel.completeAuth(authCode)
-            }
+            val navController = rememberNavController()
+
             PhotoAlbumTheme {
-                Column {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                ) {
                     Button(onClick = {
-                        val signInIntent = client.signInIntent
-                        launcher.launch(signInIntent)
-                    }) {
-                        Text("Sign in")
-                    }
-                    Button(onClick = {
-                        client.signOut()
-                    }) {
-                        Text("Sign out")
-                    }
-                    Button(onClick = {
-                        try{
+                        try {
                             val adminName = ComponentName(this@MainActivity, DeviceAdmin::class.java)
                             val dpm = getSystemService(DevicePolicyManager::class.java)
                             dpm.setLockTaskPackages(adminName, arrayOf(packageName))
@@ -63,9 +49,15 @@ class MainActivity : ComponentActivity() {
                     }) {
                         Text("Lock task mode")
                     }
-                    LazyColumn {
-                        items(viewModel.albums) {
-                            Text(it.title)
+                    NavHost(
+                        navController = navController,
+                        startDestination = "albums",
+                    ) {
+                        composable("sign-in") {
+                            SignInScreen()
+                        }
+                        composable("albums") {
+                            AlbumsScreen()
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 package uk.co.sullenart.photoalbum.service
 
+import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -7,18 +8,33 @@ import retrofit2.Retrofit
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
+import uk.co.sullenart.photoalbum.MainApplication
+import uk.co.sullenart.photoalbum.database.Database
 
-class Auth {
+class Auth(
+    private val database: Database,
+) {
+    private val tokens = Tokens()
+
     private interface Service {
         @POST("/token")
         @FormUrlEncoded
-        suspend fun exchangeCode(
+        suspend fun exchange(
             @Field("code") code: String,
             @Field("client_id") clientId: String,
             @Field("client_secret") clientSecret: String,
             @Field("grant_type") grantType: String,
             @Field("redirect_uri") redirectUri: String,
-        ): ExchangeResponse
+        ): TokensResponse
+
+        @POST("/token")
+        @FormUrlEncoded
+        suspend fun refresh(
+            @Field("client_id") clientId: String,
+            @Field("client_secret") clientSecret: String,
+            @Field("refresh_token") refreshToken: String,
+            @Field("grant_type") grantType: String = "refresh_token",
+        ): TokensResponse
     }
 
     private val service: Service by lazy {
@@ -31,24 +47,38 @@ class Auth {
             .create(Service::class.java)
     }
 
-    private fun storeTokens(tokens: Tokens) {
-        AuthInterceptor.tokens = tokens
+    private suspend fun storeTokens(tokens: Tokens) {
+        database.tokensDao().put(tokens)
     }
 
     suspend fun exchangeCode(code: String) {
-        val response = service.exchangeCode(
+        val response = service.exchange(
             code = code,
             clientId = CLIENT_ID,
             clientSecret = CLIENT_SECRET,
             grantType = GRANT_TYPE,
             redirectUri = REDIRECT_URI,
         )
-        storeTokens(
-            Tokens(
-                accessToken = response.access_token.orEmpty(),
-                refreshToken = response.refresh_token.orEmpty(),
-            )
+        val tokens = Tokens(
+            accessToken = response.access_token.orEmpty(),
+            refreshToken = response.refresh_token.orEmpty(),
         )
+        Log.d("GD", "Code exchanged for tokens $tokens")
+        storeTokens(tokens)
+    }
+
+    suspend fun refresh() {
+        val response = service.refresh(
+            clientId = CLIENT_ID,
+            clientSecret = CLIENT_SECRET,
+            refreshToken = tokens.refreshToken,
+        )
+        val tokens = Tokens(
+            accessToken = response.access_token.orEmpty(),
+            refreshToken = response.refresh_token.orEmpty(),
+        )
+        Log.d("GD", "Tokens refreshed $tokens")
+        storeTokens(tokens)
     }
 
     companion object {
