@@ -17,9 +17,17 @@ class GooglePhotos {
         val albums: List<Album>
     )
 
+    @Serializable
+    private data class SharedAlbumsResponse(
+        val sharedAlbums: List<Album>
+    )
+
     private interface Service {
         @GET("/v1/albums")
         suspend fun albums(): AlbumsResponse
+
+        @GET("/v1/sharedAlbums")
+        suspend fun sharedAlbums(): SharedAlbumsResponse
     }
 
     private val service: Service by lazy {
@@ -40,4 +48,8 @@ class GooglePhotos {
     suspend fun getAlbums(): List<Album> =
         service.albums()
             .albums
+
+    suspend fun getSharedAlbums(): List<Album> =
+        service.sharedAlbums()
+            .sharedAlbums
 }

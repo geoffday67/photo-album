@@ -16,14 +16,7 @@ class PhotosViewModel : ViewModel() {
         viewModelScope.launch {
             auth.exchangeCode(code)
             albums.clear()
-            albums.addAll(googlePhotos.getAlbums())
-        }
-    }
-
-    fun fetchAlbums() {
-        viewModelScope.launch {
-            albums.clear()
-            albums.addAll(googlePhotos.getAlbums())
+            albums.addAll(googlePhotos.getSharedAlbums())
         }
     }
 }
