@@ -9,11 +9,25 @@ import uk.co.sullenart.photoalbum.service.GooglePhotos
 
 class AlbumsViewModel(
     private val googlePhotos: GooglePhotos,
+    private val albumsRepository: AlbumsRepository,
     ): ViewModel() {
     val albums = mutableStateListOf<Album>()
 
+    val albumFlow = albumsRepository.albumFlow
+
     init {
-        refresh()
+        viewModelScope.launch {
+            albumsRepository.albumFlow.collect {
+                albums.clear()
+                albums.addAll(it)
+            }
+        }
+    }
+
+    fun test() {
+        viewModelScope.launch {
+            albumsRepository.test("Hello")
+        }
     }
 
     fun refresh() {

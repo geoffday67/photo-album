@@ -7,7 +7,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import uk.co.sullenart.photoalbum.Album
 
@@ -52,6 +51,10 @@ class GooglePhotos(
             .albums
 
     suspend fun getSharedAlbums(): List<Album> =
-        service.sharedAlbums()
-            .sharedAlbums
+        try {
+            service.sharedAlbums()
+                .sharedAlbums
+        } catch (ignore: Exception) {
+            emptyList()
+        }
 }

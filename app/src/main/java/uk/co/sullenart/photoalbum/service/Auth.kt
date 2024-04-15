@@ -1,6 +1,5 @@
 package uk.co.sullenart.photoalbum.service
 
-import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -8,11 +7,12 @@ import retrofit2.Retrofit
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
-import uk.co.sullenart.photoalbum.MainApplication
-import uk.co.sullenart.photoalbum.database.Database
+import timber.log.Timber
+import uk.co.sullenart.photoalbum.CLIENT_ID
+import uk.co.sullenart.photoalbum.CLIENT_SECRET
 
 class Auth(
-    private val database: Database,
+    private val tokensRepository: TokensRepository,
 ) {
     private val tokens = Tokens()
 
@@ -48,7 +48,7 @@ class Auth(
     }
 
     private suspend fun storeTokens(tokens: Tokens) {
-        database.tokensDao().put(tokens)
+        tokensRepository.store(tokens)
     }
 
     suspend fun exchangeCode(code: String) {
@@ -63,27 +63,30 @@ class Auth(
             accessToken = response.access_token.orEmpty(),
             refreshToken = response.refresh_token.orEmpty(),
         )
-        Log.d("GD", "Code exchanged for tokens $tokens")
+        Timber.i("Code exchanged for $tokens")
         storeTokens(tokens)
     }
 
     suspend fun refresh() {
+        val refreshToken = tokensRepository.getRefresh()
+        if (refreshToken == null) {
+            Timber.w("No refresh token found")
+            return
+        }
         val response = service.refresh(
             clientId = CLIENT_ID,
             clientSecret = CLIENT_SECRET,
-            refreshToken = tokens.refreshToken,
+            refreshToken = refreshToken,
         )
         val tokens = Tokens(
             accessToken = response.access_token.orEmpty(),
             refreshToken = response.refresh_token.orEmpty(),
         )
-        Log.d("GD", "Tokens refreshed $tokens")
+        Timber.i("Tokens refreshed $tokens")
         storeTokens(tokens)
     }
 
     companion object {
-        private const val CLIENT_ID = "623200176730-43pm5mfljjfj5unb63m75tdhhlt2jcdt.apps.googleusercontent.com"
-        private const val CLIENT_SECRET = "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"
         private const val GRANT_TYPE = "authorization_code"
         private const val REDIRECT_URI = "https://www.sullenart.co.uk/photoalbum/auth"
     }

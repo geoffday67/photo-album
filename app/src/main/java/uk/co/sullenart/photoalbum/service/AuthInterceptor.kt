@@ -2,23 +2,28 @@ package uk.co.sullenart.photoalbum.service
 
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
-import okhttp3.Request
 import okhttp3.Response
-import uk.co.sullenart.photoalbum.MainApplication
-import uk.co.sullenart.photoalbum.database.Database
+import timber.log.Timber
 import java.io.IOException
 
 class AuthInterceptor(
     private val auth: Auth,
-    private val database: Database,
+    private val tokensRepository: TokensRepository,
 ) : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
-        var requestBuilder = chain.request().newBuilder()
-
-        runBlocking {
-            requestBuilder.addHeader("Authorization", "Bearer ${database.tokensDao().get().accessToken}")
+        var accessToken = runBlocking {
+            tokensRepository.getAccess()
         }
+
+        if (accessToken == null) {
+            val exception = IOException("No access token found")
+            Timber.e(exception)
+            throw exception
+        }
+
+        var requestBuilder = chain.request().newBuilder()
+        requestBuilder.addHeader("Authorization", "Bearer $accessToken")
 
         // Try the call once.
         var response = chain.proceed(requestBuilder.build())
@@ -31,7 +36,8 @@ class AuthInterceptor(
             // We're already in a background thread so safe (and recommended) to do a simple block here.
             runBlocking {
                 auth.refresh()
-                requestBuilder.addHeader("Authorization", "Bearer ${database.tokensDao().get().accessToken}")
+                accessToken = tokensRepository.getAccess()
+                requestBuilder.addHeader("Authorization", "Bearer $accessToken ")
             }
             response = chain.proceed(requestBuilder.build())
         }
