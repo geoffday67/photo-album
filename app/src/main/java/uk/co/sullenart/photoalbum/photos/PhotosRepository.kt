@@ -5,12 +5,13 @@ import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
+import uk.co.sullenart.photoalbum.albums.Album
 
 class PhotosRepository(
     private val realm: Realm,
-    ) {
-    val photoFlow: Flow<List<Photo>>
-        get() = realm.query<RealmPhoto>("albumId == $0", "AGMfN6Pcs2aS42pFDBuGOuZ7IcSGKWQAll6oFUA-KYa0xkCSaxNTb3kwMd1ntivM95Ojs3QYJMme").asFlow().map {
+) {
+    fun getPhotoFlowForAlbum(albumId: String): Flow<List<Photo>> =
+        realm.query<RealmPhoto>("albumId == $0", albumId).asFlow().map {
             it.list
                 .map { it.toPhoto() }
         }

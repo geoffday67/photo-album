@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 
 class PhotosViewmodel(
     photosRepository: PhotosRepository,
+    albumId: String,
 ) : ViewModel() {
-    val photoFlow = photosRepository.photoFlow
+    val photoFlow = photosRepository.getPhotoFlowForAlbum(albumId)
 }

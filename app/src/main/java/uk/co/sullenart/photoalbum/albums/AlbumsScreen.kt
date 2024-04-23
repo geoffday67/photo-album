@@ -12,14 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.albums.AlbumsViewmodel
 
 @Composable
 fun AlbumsScreen(
-    viewModel: AlbumsViewmodel = koinViewModel()
+    navController: NavController,
+    viewModel: AlbumsViewmodel = koinViewModel { parametersOf(navController) },
 ) {
     Content(
         albums = viewModel.albumFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,

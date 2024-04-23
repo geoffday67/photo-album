@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.ImageLoader
@@ -13,11 +14,13 @@ import coil.request.ImageRequest
 import coil.request.ImageResult
 import coil.request.SuccessResult
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 
 @Composable
 fun PhotosScreen(
-    viewModel: PhotosViewmodel = koinViewModel(),
+    albumId: String,
+    viewModel: PhotosViewmodel = koinViewModel { parametersOf(albumId) },
 ) {
     Content(
         photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
@@ -35,16 +38,20 @@ private fun Content(
     ) {
         items(photos) {
             val request = ImageRequest.Builder(LocalContext.current)
+                // TODO Get an appropriate size.
                 .data("${it.url}=w2048-h2048")
                 .diskCacheKey(it.id)
                 .listener(resultListener)
                 .build()
-            AsyncImage(model = request, contentDescription = null)
+            AsyncImage(
+                model = request,
+                contentDescription = null,
+            )
         }
     }
 }
 
-private val resultListener = object: ImageRequest.Listener {
+private val resultListener = object : ImageRequest.Listener {
     override fun onSuccess(request: ImageRequest, result: SuccessResult) {
         Timber.d("Loaded image from ${result.dataSource} using key ${result.diskCacheKey}")
     }

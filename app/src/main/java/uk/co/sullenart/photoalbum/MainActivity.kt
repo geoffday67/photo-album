@@ -26,15 +26,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Timber.d("Album = ${get<Config>().album}")
-
         setContent {
             val navController = rememberNavController()
 
             PhotoAlbumTheme {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                ) {
+                Column() {
                     Button(onClick = {
                         try {
                             val adminName = ComponentName(this@MainActivity, DeviceAdmin::class.java)
@@ -49,16 +45,17 @@ class MainActivity : ComponentActivity() {
                     }
                     NavHost(
                         navController = navController,
-                        startDestination = "photos",
+                        startDestination = "albums",
                     ) {
                         composable("sign-in") {
                             SignInScreen()
                         }
                         composable("albums") {
-                            AlbumsScreen()
+                            AlbumsScreen(navController)
                         }
-                        composable("photos") {
-                            PhotosScreen()
+                        composable("photos/{albumId}") {
+                            val albumId = it.arguments?.getString("albumId") ?: ""
+                            PhotosScreen(albumId)
                         }
                     }
                 }

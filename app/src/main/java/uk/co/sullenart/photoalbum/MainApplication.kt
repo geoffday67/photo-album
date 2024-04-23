@@ -4,6 +4,7 @@ import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
+import coil.imageLoader
 import coil.memory.MemoryCache
 import coil.util.Logger
 import io.realm.kotlin.Realm
@@ -57,7 +58,7 @@ class MainApplication : Application(), ImageLoaderFactory {
                     factoryOf(::PhotosRepository)
 
                     single(createdAtStart = true) {
-                        BackgroundFetcher(get(), get(), get()).apply {
+                        BackgroundFetcher(get(), get(), get(), get(), get()).apply {
                             GlobalScope.launch {
                                 start()
                             }
@@ -72,6 +73,8 @@ class MainApplication : Application(), ImageLoaderFactory {
                             .build()
                         Realm.open(config)
                     }
+
+                    single<ImageLoader> { androidContext().imageLoader }
                 }
             )
         }
@@ -95,6 +98,7 @@ class MainApplication : Application(), ImageLoaderFactory {
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
+                    // TODO Configure a large cache size.
                     .maxSizeBytes(1024 * 1024 * 1024)
                     .build()
             }
