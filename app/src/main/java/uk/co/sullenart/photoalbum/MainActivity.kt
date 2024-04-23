@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import org.koin.android.ext.android.get
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.config.Config
+import uk.co.sullenart.photoalbum.photos.PhotosScreen
 import uk.co.sullenart.photoalbum.sign_in.SignInScreen
 import uk.co.sullenart.photoalbum.ui.theme.PhotoAlbumTheme
 
@@ -48,13 +49,16 @@ class MainActivity : ComponentActivity() {
                     }
                     NavHost(
                         navController = navController,
-                        startDestination = "albums",
+                        startDestination = "photos",
                     ) {
                         composable("sign-in") {
                             SignInScreen()
                         }
                         composable("albums") {
                             AlbumsScreen()
+                        }
+                        composable("photos") {
+                            PhotosScreen()
                         }
                     }
                 }

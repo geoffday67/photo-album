@@ -1,9 +1,15 @@
 package uk.co.sullenart.photoalbum
 
 import android.app.Application
-import android.content.Context
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.disk.DiskCache
+import coil.memory.MemoryCache
+import coil.util.Logger
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -13,16 +19,21 @@ import org.koin.dsl.module
 import timber.log.Timber
 import timber.log.Timber.DebugTree
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
-import uk.co.sullenart.photoalbum.albums.AlbumsViewModel
+import uk.co.sullenart.photoalbum.albums.AlbumsViewmodel
+import uk.co.sullenart.photoalbum.albums.RealmAlbum
+import uk.co.sullenart.photoalbum.auth.Auth
+import uk.co.sullenart.photoalbum.auth.AuthInterceptor
+import uk.co.sullenart.photoalbum.auth.RealmTokens
+import uk.co.sullenart.photoalbum.auth.TokensRepository
+import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.config.Config
-import uk.co.sullenart.photoalbum.realm.RealmAlbum
-import uk.co.sullenart.photoalbum.service.Auth
-import uk.co.sullenart.photoalbum.service.AuthInterceptor
-import uk.co.sullenart.photoalbum.service.GooglePhotos
-import uk.co.sullenart.photoalbum.service.TokensRepository
+import uk.co.sullenart.photoalbum.google.GooglePhotos
+import uk.co.sullenart.photoalbum.photos.PhotosRepository
+import uk.co.sullenart.photoalbum.photos.PhotosViewmodel
+import uk.co.sullenart.photoalbum.photos.RealmPhoto
 import uk.co.sullenart.photoalbum.sign_in.SignInViewModel
 
-class MainApplication : Application() {
+class MainApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
@@ -35,38 +46,60 @@ class MainApplication : Application() {
             modules(
                 module {
                     single<Config> { Config(album = "Photo album") }
-                    viewModelOf(::PhotosViewModel)
                     viewModelOf(::SignInViewModel)
-                    viewModelOf(::AlbumsViewModel)
+                    viewModelOf(::AlbumsViewmodel)
+                    viewModelOf(::PhotosViewmodel)
                     singleOf(::GooglePhotos)
                     singleOf(::Auth)
                     singleOf(::AuthInterceptor)
                     factoryOf(::TokensRepository)
                     factoryOf(::AlbumsRepository)
+                    factoryOf(::PhotosRepository)
+
+                    single(createdAtStart = true) {
+                        BackgroundFetcher(get(), get(), get()).apply {
+                            GlobalScope.launch {
+                                start()
+                            }
+                        }
+                    }
 
                     single<Realm> {
-                        val config = RealmConfiguration.create(schema = setOf(RealmAlbum::class))
+                        val config = RealmConfiguration.Builder(
+                            schema = setOf(RealmAlbum::class, RealmTokens::class, RealmPhoto::class),
+                        )
+                            .deleteRealmIfMigrationNeeded()
+                            .build()
                         Realm.open(config)
                     }
                 }
             )
         }
+    }
 
-        /*GlobalScope.launch {
-            /*realm.write {
-                val album = RealmAlbum().apply {
-                    title = "Geoff is great!"
-                }
-                copyToRealm(album)
-                Timber.d("Data written to Realm")
-            }*/
+    private val coilLogger = object : Logger {
+        override var level: Int = 0
 
-            realm.query<RealmAlbum>().asFlow().map { it.list.copyFromRealm().map { Album(it.title) } }.collect {
-                Timber.d("Found ${it.joinToString { it.title }}")
+        override fun log(tag: String, priority: Int, message: String?, throwable: Throwable?) {
+            Timber.i(message)
+        }
+    }
+
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this)
+            .memoryCache {
+                MemoryCache.Builder(this)
+                    .maxSizePercent(0.25)
+                    .build()
             }
-
-            realm.close()
-            Timber.d("Realm closed")
-        }*/
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(1024 * 1024 * 1024)
+                    .build()
+            }
+            .logger(coilLogger)
+            .respectCacheHeaders(false)
+            .build()
     }
 }

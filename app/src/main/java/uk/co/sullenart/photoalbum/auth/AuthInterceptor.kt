@@ -1,4 +1,4 @@
-package uk.co.sullenart.photoalbum.service
+package uk.co.sullenart.photoalbum.auth
 
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor

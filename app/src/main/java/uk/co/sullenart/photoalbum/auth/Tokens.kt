@@ -1,4 +1,4 @@
-package uk.co.sullenart.photoalbum.service
+package uk.co.sullenart.photoalbum.auth
 
 data class Tokens(
     val accessToken: String = "",

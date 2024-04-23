@@ -1,52 +1,62 @@
 package uk.co.sullenart.photoalbum
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
-import uk.co.sullenart.photoalbum.albums.AlbumsViewModel
+import timber.log.Timber
+import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.albums.AlbumsViewmodel
 
 @Composable
 fun AlbumsScreen(
-    viewModel: AlbumsViewModel = koinViewModel()
+    viewModel: AlbumsViewmodel = koinViewModel()
 ) {
     Content(
-        onTestClicked = viewModel::test,
-        albums = viewModel.albumFlow.collectAsStateWithLifecycle(initialValue = emptyList<Album>()).value,
-        )
+        albums = viewModel.albumFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+        onAlbumClicked = viewModel::onAlbumClicked,
+    )
 }
 
 @Composable
 private fun Content(
-    onTestClicked: () -> Unit,
     albums: List<Album>,
+    onAlbumClicked: (Album) -> Unit,
 ) {
     LazyColumn(
         Modifier.fillMaxSize(),
     ) {
-        item {
-            Button(onClick = onTestClicked) {
-                Text("Test")
-            }
-        }
         items(albums) {
-            Text(it.title)
+            AlbumItem(
+                album = it,
+                onClicked = { onAlbumClicked(it) },
+            )
         }
     }
 
 }
 
-@Preview
 @Composable
-fun Preview() {
-    Content(
-        onTestClicked = { },
-        albums = listOf(Album("First"), Album("Second"), Album("Third")),
-    )
+private fun AlbumItem(
+    album: Album,
+    onClicked: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClicked() },
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(album.title)
+        Text(album.itemCount.toString())
+    }
 }

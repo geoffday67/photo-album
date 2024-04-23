@@ -6,7 +6,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
-import uk.co.sullenart.photoalbum.service.Auth
+import uk.co.sullenart.photoalbum.auth.Auth
 
 class SignInViewModel(
     private val auth: Auth,

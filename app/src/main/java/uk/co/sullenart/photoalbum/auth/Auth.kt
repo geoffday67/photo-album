@@ -1,8 +1,10 @@
-package uk.co.sullenart.photoalbum.service
+package uk.co.sullenart.photoalbum.auth
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -14,8 +16,6 @@ import uk.co.sullenart.photoalbum.CLIENT_SECRET
 class Auth(
     private val tokensRepository: TokensRepository,
 ) {
-    private val tokens = Tokens()
-
     private interface Service {
         @POST("/token")
         @FormUrlEncoded
@@ -38,10 +38,14 @@ class Auth(
     }
 
     private val service: Service by lazy {
+        val client = OkHttpClient.Builder()
+            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
+            .build()
         val contentType = "application/json".toMediaType()
         val json = Json { ignoreUnknownKeys = true }
         Retrofit.Builder()
             .baseUrl("https://oauth2.googleapis.com/")
+            .client(client)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
             .create(Service::class.java)
@@ -59,31 +63,27 @@ class Auth(
             grantType = GRANT_TYPE,
             redirectUri = REDIRECT_URI,
         )
-        val tokens = Tokens(
-            accessToken = response.access_token.orEmpty(),
-            refreshToken = response.refresh_token.orEmpty(),
-        )
+        val tokens = response.toTokens()
         Timber.i("Code exchanged for $tokens")
         storeTokens(tokens)
     }
 
     suspend fun refresh() {
-        val refreshToken = tokensRepository.getRefresh()
-        if (refreshToken == null) {
-            Timber.w("No refresh token found")
+        val tokens = tokensRepository.fetch()
+        if (tokens == null) {
+            Timber.w("No tokens found")
             return
         }
+
         val response = service.refresh(
             clientId = CLIENT_ID,
             clientSecret = CLIENT_SECRET,
-            refreshToken = refreshToken,
+            refreshToken = tokens.refreshToken,
         )
-        val tokens = Tokens(
-            accessToken = response.access_token.orEmpty(),
-            refreshToken = response.refresh_token.orEmpty(),
-        )
-        Timber.i("Tokens refreshed $tokens")
-        storeTokens(tokens)
+
+        val newTokens = tokens.copy(accessToken = response.toTokens().accessToken)
+        Timber.i("Tokens refreshed $newTokens")
+        storeTokens(newTokens)
     }
 
     companion object {
