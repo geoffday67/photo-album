@@ -1,8 +1,11 @@
 package uk.co.sullenart.photoalbum.photos
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -22,9 +25,16 @@ fun PhotosScreen(
     albumId: String,
     viewModel: PhotosViewmodel = koinViewModel { parametersOf(albumId) },
 ) {
-    Content(
-        photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
-    )
+    Column {
+        Button(
+            onClick = viewModel::refresh,
+            ) {
+            Text("Refresh")
+        }
+        Content(
+            photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+        )
+    }
 }
 
 @Composable

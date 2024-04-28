@@ -63,6 +63,7 @@ class GooglePhotos(
             service.sharedAlbums()
                 .sharedAlbums.orEmpty()
                 .map { it.toAlbum() }
+                .filterNot { it.title == "Photos lounge" }
         } catch (error: Exception) {
             Timber.e(error)
             null

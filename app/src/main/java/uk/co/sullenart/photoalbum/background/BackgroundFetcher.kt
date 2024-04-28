@@ -1,14 +1,5 @@
 package uk.co.sullenart.photoalbum.background
 
-import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
-import coil.decode.DecodeResult
-import coil.decode.Decoder
-import coil.request.CachePolicy
-import coil.request.ImageRequest
 import kotlinx.coroutines.delay
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
@@ -20,8 +11,6 @@ class BackgroundFetcher(
     private val googlePhotos: GooglePhotos,
     private val albumsRepository: AlbumsRepository,
     private val photosRepository: PhotosRepository,
-    private val context: Context,
-    private val imageLoader: ImageLoader,
 ) {
     suspend fun start() {
         while (true) {
@@ -31,7 +20,6 @@ class BackgroundFetcher(
         }
     }
 
-    @OptIn(ExperimentalCoilApi::class)
     suspend fun refresh() {
         val albums = googlePhotos.getSharedAlbums() ?: run {
             Timber.e("Failed to get shared album list from Google")
@@ -39,6 +27,8 @@ class BackgroundFetcher(
         }
         Timber.d("Fetched ${albums.size} shared albums")
         albumsRepository.sync(albums)
+
+        // TODO Decide which albums to get the photos for, or just get all of them?
 
         val photos: MutableList<Photo> = mutableListOf()
         albums.forEach { album ->
@@ -52,23 +42,5 @@ class BackgroundFetcher(
         }
 
         photosRepository.sync(photos)
-        photos.forEach {
-            val snapshot = imageLoader.diskCache?.openSnapshot(it.id)
-            if (snapshot == null) {
-                val request = ImageRequest.Builder(context)
-                    .data("${it.url}=w2048-h2048")
-                    .diskCacheKey(it.id)
-                    // Disable reading from/writing to the memory cache.
-                    .memoryCachePolicy(CachePolicy.DISABLED)
-                    // Set a custom `Decoder.Factory` that skips the decoding step.
-                    .decoderFactory { _, _, _ ->
-                        Decoder { DecodeResult(ColorDrawable(Color.BLACK), false) }
-                    }
-                    .build()
-                imageLoader.enqueue(request)
-                Timber.d("Photo ${it.id} loaded into cache")
-            }
-            snapshot?.close()
-        }
     }
 }

@@ -57,13 +57,14 @@ class MainApplication : Application(), ImageLoaderFactory {
                     factoryOf(::AlbumsRepository)
                     factoryOf(::PhotosRepository)
 
-                    single(createdAtStart = true) {
+                    singleOf(::BackgroundFetcher)
+                    /*single(createdAtStart = true) {
                         BackgroundFetcher(get(), get(), get(), get(), get()).apply {
                             GlobalScope.launch {
                                 start()
                             }
                         }
-                    }
+                    }*/
 
                     single<Realm> {
                         val config = RealmConfiguration.Builder(
