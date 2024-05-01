@@ -3,12 +3,13 @@ package uk.co.sullenart.photoalbum.photos
 import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import coil.ImageLoader
-import coil.annotation.ExperimentalCoilApi
-import coil.decode.DecodeResult
-import coil.decode.Decoder
-import coil.request.CachePolicy
-import coil.request.ImageRequest
+import coil3.ImageLoader
+import coil3.annotation.ExperimentalCoilApi
+import coil3.asCoilImage
+import coil3.decode.DecodeResult
+import coil3.decode.Decoder
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,9 @@ class PhotosRepository(
             it.list
                 .map { it.toPhoto() }
         }
+
+    fun getPhotoFromId(id: String): Photo? =
+        realm.query<RealmPhoto>("id == $0", id).first().find()?.toPhoto()
 
     suspend fun clear() {
         realm.write {
@@ -72,14 +76,15 @@ class PhotosRepository(
         return snapshot != null
     }
 
+    @OptIn(ExperimentalCoilApi::class)
     private fun addToCache(photo: Photo) {
         val request = ImageRequest.Builder(context)
             // TODO Use a common method for getting the image URL.
-            .data("${photo.url}=w2048-h2048")
+            .data(photo.usableUrl)
             .diskCacheKey(photo.id)
             .memoryCachePolicy(CachePolicy.DISABLED)
             .decoderFactory { _, _, _ ->
-                Decoder { DecodeResult(ColorDrawable(Color.BLACK), false) }
+                Decoder { DecodeResult(ColorDrawable(Color.BLACK).asCoilImage(), false) }
             }
             .build()
         imageLoader.enqueue(request)

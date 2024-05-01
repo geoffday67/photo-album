@@ -1,4 +1,4 @@
-package uk.co.sullenart.photoalbum.sign_in
+package uk.co.sullenart.photoalbum.config
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,10 +7,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
 import uk.co.sullenart.photoalbum.auth.Auth
+import uk.co.sullenart.photoalbum.auth.UserRepository
 
-class SignInViewModel(
+class ConfigViewmodel(
     private val auth: Auth,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
+    val userFlow = userRepository.userFlow
+
     val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
         .requestServerAuthCode(CLIENT_ID, true)
@@ -19,8 +23,13 @@ class SignInViewModel(
 
     fun completeAuth(account: GoogleSignInAccount) {
         viewModelScope.launch {
-            val code = account.serverAuthCode ?: ""
-            auth.exchangeCode(code)
+            auth.exchangeCode(account)
+        }
+    }
+
+    fun handleSignOut() {
+        viewModelScope.launch {
+            auth.signOut()
         }
     }
 

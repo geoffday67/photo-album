@@ -1,16 +1,16 @@
 package uk.co.sullenart.photoalbum
 
 import android.app.Application
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.disk.DiskCache
-import coil.imageLoader
-import coil.memory.MemoryCache
-import coil.util.Logger
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.disk.DiskCache
+import coil3.disk.directory
+import coil3.imageLoader
+import coil3.memory.MemoryCache
+import coil3.util.Logger
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModelOf
 import org.koin.core.context.startKoin
@@ -24,17 +24,18 @@ import uk.co.sullenart.photoalbum.albums.AlbumsViewmodel
 import uk.co.sullenart.photoalbum.albums.RealmAlbum
 import uk.co.sullenart.photoalbum.auth.Auth
 import uk.co.sullenart.photoalbum.auth.AuthInterceptor
-import uk.co.sullenart.photoalbum.auth.RealmTokens
-import uk.co.sullenart.photoalbum.auth.TokensRepository
+import uk.co.sullenart.photoalbum.auth.RealmUser
+import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.config.Config
+import uk.co.sullenart.photoalbum.detail.DetailViewmodel
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import uk.co.sullenart.photoalbum.photos.PhotosRepository
 import uk.co.sullenart.photoalbum.photos.PhotosViewmodel
 import uk.co.sullenart.photoalbum.photos.RealmPhoto
-import uk.co.sullenart.photoalbum.sign_in.SignInViewModel
+import uk.co.sullenart.photoalbum.config.ConfigViewmodel
 
-class MainApplication : Application(), ImageLoaderFactory {
+class MainApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
@@ -47,13 +48,14 @@ class MainApplication : Application(), ImageLoaderFactory {
             modules(
                 module {
                     single<Config> { Config(album = "Photo album") }
-                    viewModelOf(::SignInViewModel)
+                    viewModelOf(::ConfigViewmodel)
                     viewModelOf(::AlbumsViewmodel)
                     viewModelOf(::PhotosViewmodel)
+                    viewModelOf(::DetailViewmodel)
                     singleOf(::GooglePhotos)
                     singleOf(::Auth)
                     singleOf(::AuthInterceptor)
-                    factoryOf(::TokensRepository)
+                    factoryOf(::UserRepository)
                     factoryOf(::AlbumsRepository)
                     factoryOf(::PhotosRepository)
 
@@ -68,7 +70,7 @@ class MainApplication : Application(), ImageLoaderFactory {
 
                     single<Realm> {
                         val config = RealmConfiguration.Builder(
-                            schema = setOf(RealmAlbum::class, RealmTokens::class, RealmPhoto::class),
+                            schema = setOf(RealmAlbum::class, RealmUser::class, RealmPhoto::class),
                         )
                             .deleteRealmIfMigrationNeeded()
                             .build()
@@ -82,18 +84,18 @@ class MainApplication : Application(), ImageLoaderFactory {
     }
 
     private val coilLogger = object : Logger {
-        override var level: Int = 0
+        override var minLevel = Logger.Level.Verbose
 
-        override fun log(tag: String, priority: Int, message: String?, throwable: Throwable?) {
+        override fun log(tag: String, level: Logger.Level, message: String?, throwable: Throwable?) {
             Timber.i(message)
         }
     }
 
-    override fun newImageLoader(): ImageLoader {
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader.Builder(this)
             .memoryCache {
-                MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
+                MemoryCache.Builder()
+                    .maxSizePercent(context, 0.25)
                     .build()
             }
             .diskCache {
@@ -104,7 +106,6 @@ class MainApplication : Application(), ImageLoaderFactory {
                     .build()
             }
             .logger(coilLogger)
-            .respectCacheHeaders(false)
             .build()
     }
 }

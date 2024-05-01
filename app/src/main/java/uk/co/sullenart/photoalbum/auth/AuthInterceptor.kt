@@ -8,7 +8,7 @@ import java.io.IOException
 
 class AuthInterceptor(
     private val auth: Auth,
-    private val tokensRepository: TokensRepository,
+    private val tokensRepository: UserRepository,
 ) : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

@@ -1,6 +1,8 @@
 package uk.co.sullenart.photoalbum.auth
 
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import io.realm.kotlin.ext.query
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -14,7 +16,7 @@ import uk.co.sullenart.photoalbum.CLIENT_ID
 import uk.co.sullenart.photoalbum.CLIENT_SECRET
 
 class Auth(
-    private val tokensRepository: TokensRepository,
+    private val userRepository: UserRepository,
 ) {
     private interface Service {
         @POST("/token")
@@ -39,7 +41,7 @@ class Auth(
 
     private val service: Service by lazy {
         val client = OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
+            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BASIC) })
             .build()
         val contentType = "application/json".toMediaType()
         val json = Json { ignoreUnknownKeys = true }
@@ -51,39 +53,55 @@ class Auth(
             .create(Service::class.java)
     }
 
-    private suspend fun storeTokens(tokens: Tokens) {
-        tokensRepository.store(tokens)
+    val isSignedIn: Boolean
+        get() = userRepository.fetch() != null
+
+    private suspend fun storeUser(user: User) {
+        userRepository.store(user)
     }
 
-    suspend fun exchangeCode(code: String) {
-        val response = service.exchange(
-            code = code,
-            clientId = CLIENT_ID,
-            clientSecret = CLIENT_SECRET,
-            grantType = GRANT_TYPE,
-            redirectUri = REDIRECT_URI,
-        )
-        val tokens = response.toTokens()
-        Timber.i("Code exchanged for $tokens")
-        storeTokens(tokens)
+    suspend fun exchangeCode(account: GoogleSignInAccount) {
+        try {
+            val response = service.exchange(
+                code = account.serverAuthCode.orEmpty(),
+                clientId = CLIENT_ID,
+                clientSecret = CLIENT_SECRET,
+                grantType = GRANT_TYPE,
+                redirectUri = REDIRECT_URI,
+            )
+            val user = User(
+                name = account.displayName.orEmpty(),
+                email = account.email.orEmpty(),
+                accessToken = response.access_token.orEmpty(),
+                refreshToken = response.refresh_token.orEmpty(),
+            )
+            Timber.i("Code exchanged for tokens for ${user.name}")
+            storeUser(user)
+        } catch (e: Exception) {
+            Timber.e("Error exchanging code for tokens: ${e.message}")
+        }
     }
 
     suspend fun refresh() {
-        val tokens = tokensRepository.fetch()
-        if (tokens == null) {
-            Timber.w("No tokens found")
+        val user = userRepository.fetch()
+        if (user == null) {
+            Timber.w("No signed-in user found")
             return
         }
 
         val response = service.refresh(
             clientId = CLIENT_ID,
             clientSecret = CLIENT_SECRET,
-            refreshToken = tokens.refreshToken,
+            refreshToken = user.refreshToken,
         )
 
-        val newTokens = tokens.copy(accessToken = response.toTokens().accessToken)
-        Timber.i("Tokens refreshed $newTokens")
-        storeTokens(newTokens)
+        val newUser = user.copy(accessToken = response.access_token.orEmpty())
+        Timber.i("Tokens refreshed for ${user.name}")
+        storeUser(newUser)
+    }
+
+    suspend fun signOut() {
+        userRepository.delete()
     }
 
     companion object {
