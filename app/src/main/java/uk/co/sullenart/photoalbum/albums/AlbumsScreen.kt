@@ -46,9 +46,6 @@ fun AlbumsScreen(
             modifier = Modifier
                 .padding(bottom = dimensionResource(R.dimen.paddingM))
         )
-        /*Button(onClick = { viewModel.refresh() }) {
-            Text("Refresh")
-        }*/
         Content(
             albums = viewModel.albumFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
             onAlbumClicked = viewModel::onAlbumClicked,
@@ -61,20 +58,15 @@ private fun Content(
     albums: List<Album>,
     onAlbumClicked: (Album) -> Unit,
 ) {
-    Card {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(dimensionResource(R.dimen.paddingM)),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.paddingM))
-        ) {
-            items(albums) {
-                AlbumItem(
-                    modifier = Modifier
-                        .clickable { onAlbumClicked(it) },
-                    album = it,
-                )
-            }
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.paddingM)),
+    ) {
+        items(albums) {
+            AlbumItem(
+                modifier = Modifier
+                    .clickable { onAlbumClicked(it) },
+                album = it,
+            )
         }
     }
 }
@@ -84,26 +76,22 @@ private fun AlbumItem(
     modifier: Modifier = Modifier,
     album: Album,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(56.dp)
-            .clip(RoundedCornerShape(size = dimensionResource(R.dimen.radius)))
-            .border(
-                width = Dp.Hairline,
-                color = MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(size = dimensionResource(R.dimen.radius)),
-            ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            modifier = modifier.padding(start = dimensionResource(R.dimen.paddingM)),
-            text = album.title,
-        )
-        Text(
-            modifier = modifier.padding(end = dimensionResource(R.dimen.paddingM)),
-            text = album.itemCount.toString(),
-        )
+    Card() {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .heightIn(56.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                modifier = modifier.padding(start = dimensionResource(R.dimen.paddingM)),
+                text = album.title,
+            )
+            Text(
+                modifier = modifier.padding(end = dimensionResource(R.dimen.paddingM)),
+                text = album.itemCount.toString(),
+            )
+        }
     }
 }

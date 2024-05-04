@@ -3,12 +3,15 @@ package uk.co.sullenart.photoalbum.config
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,30 +41,39 @@ fun ConfigPanel(
         modifier = modifier
             .animateContentSize(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(dimensionResource(R.dimen.paddingM)),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
+            contentAlignment = Alignment.Center,
         ) {
-            Greeting(
+            if (viewModel.loading) {
+                CircularProgressIndicator()
+            }
+
+            Column(
                 modifier = Modifier
-                    .padding(bottom = dimensionResource(R.dimen.paddingM)),
-            )
-            if (user != null) {
-                UserDetails(
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.paddingM)),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Greeting(
                     modifier = Modifier
                         .padding(bottom = dimensionResource(R.dimen.paddingM)),
-                    name = user.name,
-                    email = user.email,
+                )
+                if (user != null) {
+                    UserDetails(
+                        modifier = Modifier
+                            .padding(bottom = dimensionResource(R.dimen.paddingM)),
+                        name = user.name,
+                        email = user.email,
+                    )
+                }
+                AuthButtons(
+                    signInOptions = viewModel.signInOptions,
+                    completeAuth = viewModel::completeAuth,
+                    signOut = viewModel::handleSignOut,
+                    isSignedIn = user != null,
+                    refresh = viewModel::refresh,
                 )
             }
-            AuthButtons(
-                signInOptions = viewModel.signInOptions,
-                completeAuth = viewModel::completeAuth,
-                signOut = viewModel::handleSignOut,
-                isSignedIn = user != null,
-            )
         }
     }
 }
@@ -104,6 +116,7 @@ private fun AuthButtons(
     signInOptions: GoogleSignInOptions,
     completeAuth: (GoogleSignInAccount) -> Unit,
     signOut: () -> Unit,
+    refresh: () -> Unit,
     isSignedIn: Boolean,
 ) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -140,6 +153,17 @@ private fun AuthButtons(
             enabled = isSignedIn,
         ) {
             Text(stringResource(R.string.sign_out))
+        }
+        Button(
+            modifier = Modifier
+                .widthIn(200.dp),
+            onClick = {
+                client.signOut()
+                refresh()
+            },
+            enabled = isSignedIn,
+        ) {
+            Text(stringResource(R.string.refresh))
         }
     }
 }

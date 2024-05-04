@@ -19,10 +19,4 @@ class AlbumsViewmodel(
         Timber.d("Album ${album.title} clicked")
         navController.navigate("photos/${album.id}")
     }
-
-    fun refresh() {
-        viewModelScope.launch {
-            backgroundFetcher.refresh()
-        }
-    }
 }

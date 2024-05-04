@@ -3,11 +3,15 @@ package uk.co.sullenart.photoalbum
 import android.app.admin.DevicePolicyManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -24,6 +28,12 @@ class MainActivity : ComponentActivity() {
         val width = resources.displayMetrics.widthPixels
         val height = resources.displayMetrics.heightPixels
         Timber.i("Screen size $width x $height")
+
+        with(WindowCompat.getInsetsController(window, window.decorView)) {
+            hide(WindowInsetsCompat.Type.statusBars())
+            hide(WindowInsetsCompat.Type.navigationBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
 
         setContent {
             val navController = rememberNavController()

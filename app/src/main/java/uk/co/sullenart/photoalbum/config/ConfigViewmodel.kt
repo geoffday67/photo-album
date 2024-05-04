@@ -1,5 +1,8 @@
 package uk.co.sullenart.photoalbum.config
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -8,12 +11,15 @@ import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
 import uk.co.sullenart.photoalbum.auth.Auth
 import uk.co.sullenart.photoalbum.auth.UserRepository
+import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 
 class ConfigViewmodel(
     private val auth: Auth,
     private val userRepository: UserRepository,
+    private val backgroundFetcher: BackgroundFetcher,
 ) : ViewModel() {
     val userFlow = userRepository.userFlow
+    var loading by mutableStateOf(false)
 
     val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
@@ -30,6 +36,19 @@ class ConfigViewmodel(
     fun handleSignOut() {
         viewModelScope.launch {
             auth.signOut()
+        }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            try {
+                loading = true
+                backgroundFetcher.refresh()
+            } catch (e: Exception) {
+
+            } finally {
+                loading = false
+            }
         }
     }
 
