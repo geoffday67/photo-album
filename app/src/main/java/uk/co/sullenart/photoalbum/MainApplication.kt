@@ -28,12 +28,14 @@ import uk.co.sullenart.photoalbum.auth.RealmUser
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.config.Config
+import uk.co.sullenart.photoalbum.config.ConfigViewmodel
 import uk.co.sullenart.photoalbum.detail.DetailViewmodel
 import uk.co.sullenart.photoalbum.google.GooglePhotos
+import uk.co.sullenart.photoalbum.main.MainViewmodel
 import uk.co.sullenart.photoalbum.photos.PhotosRepository
 import uk.co.sullenart.photoalbum.photos.PhotosViewmodel
 import uk.co.sullenart.photoalbum.photos.RealmPhoto
-import uk.co.sullenart.photoalbum.config.ConfigViewmodel
+import uk.co.sullenart.photoalbum.settings.SettingsViewmodel
 
 class MainApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
@@ -52,6 +54,8 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                     viewModelOf(::AlbumsViewmodel)
                     viewModelOf(::PhotosViewmodel)
                     viewModelOf(::DetailViewmodel)
+                    viewModelOf(::MainViewmodel)
+                    viewModelOf(::SettingsViewmodel)
                     singleOf(::GooglePhotos)
                     singleOf(::Auth)
                     singleOf(::AuthInterceptor)

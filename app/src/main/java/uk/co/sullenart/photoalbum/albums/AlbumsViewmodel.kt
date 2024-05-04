@@ -9,7 +9,6 @@ import timber.log.Timber
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 
 class AlbumsViewmodel(
-    private val backgroundFetcher: BackgroundFetcher,
     albumsRepository: AlbumsRepository,
     private val navController: NavController,
 ) : ViewModel() {
