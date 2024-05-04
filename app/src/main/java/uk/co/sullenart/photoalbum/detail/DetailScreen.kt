@@ -78,6 +78,6 @@ private fun DetailItem(
 private val resultListener = object : ImageRequest.Listener {
     override fun onSuccess(request: ImageRequest, result: SuccessResult) {
         // Timber.d("Loaded full image from ${result.dataSource} using key ${result.diskCacheKey}")
-        Timber.i("Loaded image ${result.image.width} x ${result.image.height}")
+        Timber.i("Loaded image ${result.image.width} x ${result.image.height} from ${result.dataSource}")
     }
 }

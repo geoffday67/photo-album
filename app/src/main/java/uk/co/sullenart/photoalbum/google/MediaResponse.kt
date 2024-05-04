@@ -6,6 +6,7 @@ import uk.co.sullenart.photoalbum.photos.Photo
 @Serializable
 data class MediaResponse(
     val mediaItems: List<MediaItemResponse>?,
+    val nextPageToken: String?,
 ) {
     @Serializable
     data class MediaItemResponse(

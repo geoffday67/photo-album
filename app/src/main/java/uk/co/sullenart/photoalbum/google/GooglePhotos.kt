@@ -34,7 +34,7 @@ class GooglePhotos(
     private val service: Service by lazy {
         val client = OkHttpClient.Builder()
             .addInterceptor(interceptor)
-            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BASIC) })
+            .addInterceptor(HttpLoggingInterceptor().apply { setLevel(HttpLoggingInterceptor.Level.BODY) })
             .build()
         val contentType = "application/json".toMediaType()
         val json = Json {
@@ -63,22 +63,34 @@ class GooglePhotos(
             service.sharedAlbums()
                 .sharedAlbums.orEmpty()
                 .map { it.toAlbum() }
-                //.filterNot { it.title == "Photos lounge" }
         } catch (error: Exception) {
             Timber.e(error)
             null
         }
 
-    suspend fun getPhotosForAlbum(album: Album): List<Photo>? =
+    suspend fun getPhotosForAlbum(album: Album): List<Photo>? {
+        val result: MutableList<Photo> = mutableListOf()
+        var nextPageToken: String? = null
+
         try {
-            val request = MediaRequest(
-                albumId = album.id,
-            )
-            service.mediaSearch(request)
-                .mediaItems.orEmpty()
-                .map { it.toPhoto() }
+            do {
+                val request = MediaRequest(
+                    albumId = album.id,
+                    pageSize = 100,
+                    pageToken = nextPageToken,
+                )
+                val response = service.mediaSearch(request)
+                result.addAll(response
+                    .mediaItems.orEmpty()
+                    .map { it.toPhoto() }
+                )
+                nextPageToken = response.nextPageToken
+            } while (nextPageToken != null)
         } catch (error: Exception) {
             Timber.e(error)
             null
         }
+
+        return result
+    }
 }

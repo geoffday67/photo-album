@@ -27,8 +27,6 @@ import uk.co.sullenart.photoalbum.auth.AuthInterceptor
 import uk.co.sullenart.photoalbum.auth.RealmUser
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
-import uk.co.sullenart.photoalbum.config.Config
-import uk.co.sullenart.photoalbum.config.ConfigViewmodel
 import uk.co.sullenart.photoalbum.detail.DetailViewmodel
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import uk.co.sullenart.photoalbum.main.MainViewmodel
@@ -49,8 +47,6 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
             androidContext(this@MainApplication)
             modules(
                 module {
-                    single<Config> { Config(album = "Photo album") }
-                    viewModelOf(::ConfigViewmodel)
                     viewModelOf(::AlbumsViewmodel)
                     viewModelOf(::PhotosViewmodel)
                     viewModelOf(::DetailViewmodel)
