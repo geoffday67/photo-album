@@ -1,8 +1,8 @@
 package uk.co.sullenart.photoalbum.photos
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,6 +23,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
+import uk.co.sullenart.photoalbum.detail.DetailScreen
 
 @Composable
 fun PhotosScreen(
@@ -30,7 +31,14 @@ fun PhotosScreen(
     navController: NavController,
     viewModel: PhotosViewmodel = koinViewModel { parametersOf(albumId, navController) },
 ) {
-    Column {
+    if (viewModel.isDetail) {
+        BackHandler(onBack = viewModel::onDetailBack)
+        DetailScreen(
+            pageCount = viewModel.photoCount,
+            initialPage = viewModel.currentIndex,
+            getPhotoFromIndex = viewModel::getPhotoFromIndex,
+        )
+    } else {
         Content(
             photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
             onPhotoClicked = viewModel::onPhotoClicked,

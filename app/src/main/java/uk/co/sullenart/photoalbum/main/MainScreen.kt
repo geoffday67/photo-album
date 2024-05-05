@@ -84,11 +84,11 @@ fun MainScreen(
                         navController = navController,
                     )
                 }
-                composable("detail/{photoId}") {
+                /*composable("detail/{photoId}") {
                     val photoId = it.arguments?.getString("photoId") ?: ""
                     DetailScreen(photoId)
                     topBarVisible = false
-                }
+                }*/
                 composable("settings") {
                     topBarVisible = true
                     SettingsScreen()

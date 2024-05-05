@@ -1,5 +1,9 @@
 package uk.co.sullenart.photoalbum.photos
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -8,21 +12,38 @@ import timber.log.Timber
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 
 class PhotosViewmodel(
-    private val backgroundFetcher: BackgroundFetcher,
     photosRepository: PhotosRepository,
     albumId: String,
     private val navController: NavController,
-    ) : ViewModel() {
+) : ViewModel() {
+    var isDetail by mutableStateOf(false)
+    var currentIndex = 0
     val photoFlow = photosRepository.getPhotoFlowForAlbum(albumId)
 
-    fun refresh() {
+    private val photos = mutableListOf<Photo>()
+
+    val photoCount: Int
+        get() = photos.size
+
+    init {
         viewModelScope.launch {
-            backgroundFetcher.refresh()
+            photosRepository.getPhotoFlowForAlbum(albumId).collect {
+                Timber.d("${it.size} photos received")
+                photos.clear()
+                photos.addAll(it)
+            }
         }
     }
 
     fun onPhotoClicked(photo: Photo) {
-        Timber.d("Photo ${photo.id} clicked")
-        navController.navigate("detail/${photo.id}")
+        currentIndex = photos.indexOf(photo)
+        isDetail = true
     }
+
+    fun onDetailBack() {
+        isDetail = false
+    }
+
+    fun getPhotoFromIndex(index: Int): Photo =
+        photos[index]
 }

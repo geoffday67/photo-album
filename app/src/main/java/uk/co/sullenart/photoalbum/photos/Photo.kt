@@ -11,4 +11,15 @@ data class Photo(
 ) {
     val usableUrl: String
         get() = "${url}=w4096-h4096"
+
+    companion object {
+        val EMPTY: Photo
+            get() = Photo(
+                id = "",
+                albumId = null,
+                url = "",
+                creationTime = Instant.now(),
+                camera = "",
+            )
+    }
 }
