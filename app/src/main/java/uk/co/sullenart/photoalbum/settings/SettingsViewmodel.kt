@@ -1,6 +1,7 @@
 package uk.co.sullenart.photoalbum.settings
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -12,14 +13,18 @@ import kotlinx.coroutines.launch
 import uk.co.sullenart.photoalbum.auth.Auth
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
+import uk.co.sullenart.photoalbum.photos.PhotosRepository
 
 class SettingsViewmodel(
     private val auth: Auth,
     private val userRepository: UserRepository,
     private val backgroundFetcher: BackgroundFetcher,
+    private val photosRepository: PhotosRepository,
 ) : ViewModel() {
     val userFlow = userRepository.userFlow
     var loading by mutableStateOf(false)
+    var totalPhotos by mutableIntStateOf(0)
+    var processedPhotos by mutableIntStateOf(0)
 
     val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
@@ -43,13 +48,21 @@ class SettingsViewmodel(
         viewModelScope.launch {
             try {
                 loading = true
-                backgroundFetcher.refresh()
+                totalPhotos = 0
+                backgroundFetcher.refresh { total, processed ->
+                    totalPhotos = total
+                    processedPhotos = processed
+                }
             } catch (e: Exception) {
 
             } finally {
                 loading = false
             }
         }
+    }
+
+    fun clearCaches() {
+      photosRepository.clearCaches()
     }
 
     companion object {

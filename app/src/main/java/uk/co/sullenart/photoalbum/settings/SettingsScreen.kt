@@ -6,13 +6,16 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +34,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import org.koin.androidx.compose.koinViewModel
 import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.auth.User
+import uk.co.sullenart.photoalbum.ui.theme.Pink80
 
 @Composable
 fun SettingsScreen(
@@ -38,20 +42,19 @@ fun SettingsScreen(
 ) {
     val user: User? = viewModel.userFlow.collectAsStateWithLifecycle(initialValue = null).value
 
-    Card(
+    Column(
         modifier = Modifier
-            .padding(dimensionResource(R.dimen.paddingM))
+            .fillMaxWidth()
+            .padding(dimensionResource(R.dimen.paddingM)),
     ) {
-        Box(
+        Card(
             modifier = Modifier
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center,
+                .fillMaxWidth()
+                .padding(bottom = dimensionResource(R.dimen.paddingM)),
         ) {
-            if (viewModel.loading) {
-                CircularProgressIndicator()
-            }
             Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(dimensionResource(R.dimen.paddingM))
             ) {
                 Greeting(
@@ -73,7 +76,44 @@ fun SettingsScreen(
                     isSignedIn = user != null,
                     refresh = viewModel::refresh,
                 )
+                ClearButton(viewModel::clearCaches)
             }
+        }
+
+        if (viewModel.loading) {
+            if (viewModel.totalPhotos > 0) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    progress = { viewModel.processedPhotos.toFloat() / viewModel.totalPhotos.toFloat() },
+                    color = Pink80,
+                )
+            } else
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    color = Pink80,
+                )
+        }
+    }
+}
+
+@Composable
+private fun ClearButton(
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Button(
+
+            modifier = Modifier
+                .widthIn(200.dp),
+            onClick = onClick
+        ) {
+            Text("Clear image caches")
         }
     }
 }

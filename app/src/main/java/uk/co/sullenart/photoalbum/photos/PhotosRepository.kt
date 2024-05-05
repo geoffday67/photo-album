@@ -12,8 +12,11 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 
 class PhotosRepository(
@@ -36,8 +39,13 @@ class PhotosRepository(
         }
     }
 
-    suspend fun sync(photos: List<Photo>) {
-        // TODO Sync the Coil image cache as well as the local data.
+    suspend fun sync(
+        photos: List<Photo>,
+        progress: ((Int, Int) -> Unit)? = null,
+        ) {
+        var count = 0
+        progress?.invoke(photos.size, count)
+
         realm.write {
             photos.forEach { photo ->
                 // Is there a current record for this photo?
@@ -46,15 +54,20 @@ class PhotosRepository(
                     // No, create a new record.
                     Timber.d("Photo not found, new record created [${photo.id}]")
                     copyToRealm(photo.toRealm())
-                    addToCache(photo)
+                    runBlocking {
+                        addToCache(photo)
+                    }
                 } else {
                     // Yes, update its properties, Realm will update the persisted record once outside the "write" scope.
                     Timber.d("Photo record updated [${photo.id}]")
                     result.copyFromPhoto(photo)
                     if (!isInCache(photo)) {
-                        addToCache(photo)
+                        runBlocking {
+                            addToCache(photo)
+                        }
                     }
                 }
+                progress?.invoke(photos.size, count++)
             }
 
             // Remove photos that we have locally but which aren't in the list.
@@ -69,7 +82,6 @@ class PhotosRepository(
         }
     }
 
-    @OptIn(ExperimentalCoilApi::class)
     private fun isInCache(photo: Photo): Boolean {
         val snapshot = imageLoader.diskCache?.openSnapshot(photo.id)
         snapshot?.close()
@@ -77,9 +89,8 @@ class PhotosRepository(
     }
 
     @OptIn(ExperimentalCoilApi::class)
-    private fun addToCache(photo: Photo) {
+    private suspend fun addToCache(photo: Photo) {
         val request = ImageRequest.Builder(context)
-            // TODO Use a common method for getting the image URL.
             .data(photo.usableUrl)
             .diskCacheKey(photo.id)
             .memoryCachePolicy(CachePolicy.DISABLED)
@@ -87,15 +98,20 @@ class PhotosRepository(
                 Decoder { DecodeResult(ColorDrawable(Color.BLACK).asCoilImage(), false) }
             }
             .build()
-        imageLoader.enqueue(request)
+        imageLoader.execute(request)
         Timber.d("Photo loaded into cache [${photo.id}]")
     }
 
-    @OptIn(ExperimentalCoilApi::class)
     private fun removeFromCache(id: String) {
         imageLoader.diskCache?.run {
             remove(id)
             Timber.d("Photo removed from cache [${id}]")
         }
+    }
+
+    fun clearCaches() {
+        imageLoader.diskCache?.clear()
+        imageLoader.memoryCache?.clear()
+        Timber.d("Photo caches cleared")
     }
 }

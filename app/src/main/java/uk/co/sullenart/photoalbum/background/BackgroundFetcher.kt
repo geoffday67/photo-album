@@ -20,7 +20,9 @@ class BackgroundFetcher(
         }
     }
 
-    suspend fun refresh() {
+    suspend fun refresh(
+        progress: ((Int, Int) -> Unit)? = null,
+    ) {
         val albums = googlePhotos.getSharedAlbums() ?: run {
             Timber.e("Failed to get shared album list from Google")
             return
@@ -41,6 +43,6 @@ class BackgroundFetcher(
             photos.addAll(photosForAlbum)
         }
 
-        photosRepository.sync(photos)
+        photosRepository.sync(photos, progress)
     }
 }

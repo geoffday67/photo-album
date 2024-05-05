@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -101,12 +103,23 @@ fun MainScreen(
 private fun PhotosTopBar(
     onSettings: () -> Unit,
 ) {
+    var infoChecked by remember { mutableStateOf(false) }
+
     TopAppBar(
         title = { Text("Photo Album") },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
         ),
         actions = {
+            IconToggleButton(
+                checked = infoChecked,
+                onCheckedChange = { infoChecked = !infoChecked },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                )
+            }
             IconButton(
                 onClick = onSettings,
             ) {

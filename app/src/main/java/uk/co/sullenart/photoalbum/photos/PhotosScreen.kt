@@ -80,7 +80,6 @@ private fun PhotoItem(
         modifier = Modifier
             .clickable { onClicked() }
             .aspectRatio(1.0f),
-        //.border(Dp.Hairline, Color.Blue),
         model = request,
         contentDescription = null,
         contentScale = ContentScale.Crop,
