@@ -29,7 +29,6 @@ import androidx.navigation.compose.composable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import uk.co.sullenart.photoalbum.albums.AlbumsScreen
-import uk.co.sullenart.photoalbum.detail.DetailScreen
 import uk.co.sullenart.photoalbum.photos.PhotosScreen
 import uk.co.sullenart.photoalbum.settings.SettingsScreen
 

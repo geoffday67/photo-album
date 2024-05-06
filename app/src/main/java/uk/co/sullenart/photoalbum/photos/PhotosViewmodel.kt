@@ -1,20 +1,16 @@
 package uk.co.sullenart.photoalbum.photos
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 
 class PhotosViewmodel(
     photosRepository: PhotosRepository,
     albumId: String,
-    private val navController: NavController,
 ) : ViewModel() {
     var isDetail by mutableStateOf(false)
     var currentIndex = 0

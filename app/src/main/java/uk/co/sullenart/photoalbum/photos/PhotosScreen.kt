@@ -23,7 +23,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
-import uk.co.sullenart.photoalbum.detail.DetailScreen
+import uk.co.sullenart.photoalbum.detail.DetailContent
 
 @Composable
 fun PhotosScreen(
@@ -33,13 +33,13 @@ fun PhotosScreen(
 ) {
     if (viewModel.isDetail) {
         BackHandler(onBack = viewModel::onDetailBack)
-        DetailScreen(
+        DetailContent(
             pageCount = viewModel.photoCount,
             initialPage = viewModel.currentIndex,
             getPhotoFromIndex = viewModel::getPhotoFromIndex,
         )
     } else {
-        Content(
+        PhotosContent(
             photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
             onPhotoClicked = viewModel::onPhotoClicked,
         )
@@ -47,7 +47,7 @@ fun PhotosScreen(
 }
 
 @Composable
-private fun Content(
+private fun PhotosContent(
     photos: List<Photo>,
     onPhotoClicked: (Photo) -> Unit,
 ) {
