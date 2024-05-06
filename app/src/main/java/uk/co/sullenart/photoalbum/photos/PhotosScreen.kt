@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.Card
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -40,6 +44,7 @@ fun PhotosScreen(
         )
     } else {
         PhotosContent(
+            state = LazyGridState(viewModel.firstIndex, viewModel.firstOffset),
             photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
             onPhotoClicked = viewModel::onPhotoClicked,
         )
@@ -48,11 +53,11 @@ fun PhotosScreen(
 
 @Composable
 private fun PhotosContent(
+    state: LazyGridState,
     photos: List<Photo>,
-    onPhotoClicked: (Photo) -> Unit,
+    onPhotoClicked: (Photo, Int, Int) -> Unit,
 ) {
     // TODO Check for recomposition
-    Timber.d("Recomposing photos content")
 
     Card(
         modifier = Modifier
@@ -60,14 +65,18 @@ private fun PhotosContent(
             .padding(dimensionResource(R.dimen.paddingM))
     ) {
         LazyVerticalGrid(
+            state = state,
             columns = GridCells.Fixed(4),
             verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.paddingS)),
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.paddingS)),
         ) {
-            items(photos.size) {
+            items(
+                count = photos.size,
+                key = { photos[it].id },
+            ) {
                 PhotoItem(
                     photo = photos[it],
-                    onClicked = { onPhotoClicked(photos[it]) }
+                    onClicked = { onPhotoClicked(photos[it], state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset) }
                 )
             }
         }
@@ -96,6 +105,6 @@ private fun PhotoItem(
 
 private val resultListener = object : ImageRequest.Listener {
     override fun onSuccess(request: ImageRequest, result: SuccessResult) {
-        Timber.d("Loaded image from ${result.dataSource} using key ${result.diskCacheKey}")
+        //Timber.d("Loaded image from ${result.dataSource} using key ${result.diskCacheKey}")
     }
 }

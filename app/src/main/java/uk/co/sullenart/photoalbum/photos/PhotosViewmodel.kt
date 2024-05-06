@@ -14,6 +14,8 @@ class PhotosViewmodel(
 ) : ViewModel() {
     var isDetail by mutableStateOf(false)
     var currentIndex = 0
+    var firstIndex: Int = 0
+    var firstOffset = 0
     val photoFlow = photosRepository.getPhotoFlowForAlbum(albumId)
 
     private val photos = mutableListOf<Photo>()
@@ -31,7 +33,9 @@ class PhotosViewmodel(
         }
     }
 
-    fun onPhotoClicked(photo: Photo) {
+    fun onPhotoClicked(photo: Photo, index: Int, offset: Int) {
+        firstIndex = index
+        firstOffset = offset
         currentIndex = photos.indexOf(photo)
         isDetail = true
     }

@@ -126,12 +126,12 @@ private fun Info(
                         .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
                         .withZone(ZoneId.systemDefault())
                         .format(photo.creationTime),
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = Color.White,
                 )
                 if (photo.camera.isNotEmpty()) {
                     Text(
                         text = photo.camera,
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = Color.White,
                     )
                 }
             }
