@@ -30,19 +30,21 @@ class BackgroundFetcher(
         Timber.d("Fetched ${albums.size} shared albums")
         albumsRepository.sync(albums)
 
-        // TODO Decide which albums to get the photos for, or just get all of them?
+        // TODO Decide which albums to get the photos for, currently it fetches photos if the number of photos in the album has changed.
 
-        val photos: MutableList<Photo> = mutableListOf()
         albums.forEach { album ->
+            if (album.itemCount == photosRepository.getCountForAlbum(album.id)) {
+                Timber.d("Skipping album ${album.title}, item count the same (${album.itemCount})")
+                return@forEach
+            }
+
             val photosForAlbum = googlePhotos.getPhotosForAlbum(album)
                 ?.map { it.copy(albumId = album.id) } ?: run {
                 Timber.e("Failed to get photos from Google for album ${album.title}")
-                return
+                return@forEach
             }
+            photosRepository.sync(album.id, photosForAlbum, progress)
             Timber.d("Fetched ${photosForAlbum.size} photos for album ${album.title}")
-            photos.addAll(photosForAlbum)
         }
-
-        photosRepository.sync(photos, progress)
     }
 }

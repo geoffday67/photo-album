@@ -54,7 +54,6 @@ class SettingsViewmodel(
                     processedPhotos = processed
                 }
             } catch (e: Exception) {
-
             } finally {
                 loading = false
             }

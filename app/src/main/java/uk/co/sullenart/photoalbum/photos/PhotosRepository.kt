@@ -30,6 +30,9 @@ class PhotosRepository(
                 .map { it.toPhoto() }
         }
 
+    fun getCountForAlbum(albumId: String): Int =
+        realm.query<RealmPhoto>("albumId == $0", albumId).count().find().toInt()
+
     fun getPhotoFromId(id: String): Photo? =
         realm.query<RealmPhoto>("id == $0", id).first().find()?.toPhoto()
 
@@ -40,16 +43,17 @@ class PhotosRepository(
     }
 
     suspend fun sync(
+        albumId: String,
         photos: List<Photo>,
         progress: ((Int, Int) -> Unit)? = null,
-        ) {
+    ) {
         var count = 0
         progress?.invoke(photos.size, count)
 
         realm.write {
             photos.forEach { photo ->
                 // Is there a current record for this photo?
-                val result = query<RealmPhoto>("id == $0", photo.id).first().find()
+                val result = query<RealmPhoto>("id == $0 AND albumId == $1", photo.id, albumId).first().find()
                 if (result == null) {
                     // No, create a new record.
                     Timber.d("Photo not found, new record created [${photo.id}]")
@@ -72,7 +76,7 @@ class PhotosRepository(
 
             // Remove photos that we have locally but which aren't in the list.
             val newIds = photos.map { it.id }
-            query<RealmPhoto>().find().forEach { existing ->
+            query<RealmPhoto>("albumId == $0", albumId).find().forEach { existing ->
                 if (!newIds.contains(existing.id)) {
                     Timber.d("Photo record deleted [${existing.id}]")
                     removeFromCache(existing.id)

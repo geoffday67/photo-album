@@ -2,7 +2,6 @@ package uk.co.sullenart.photoalbum.google
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.internal.throwArrayMissingFieldException
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -88,7 +87,6 @@ class GooglePhotos(
             } while (nextPageToken != null)
         } catch (error: Exception) {
             Timber.e(error)
-            null
         }
 
         return result
