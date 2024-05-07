@@ -7,9 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 
 class PhotosViewmodel(
     photosRepository: PhotosRepository,
+    albumsRepository: AlbumsRepository,
     albumId: String,
 ) : ViewModel() {
     var isDetail by mutableStateOf(false)
@@ -17,6 +20,7 @@ class PhotosViewmodel(
     var firstIndex: Int = 0
     var firstOffset = 0
     val photoFlow = photosRepository.getPhotoFlowForAlbum(albumId)
+    val album = albumsRepository.getAlbum(albumId) ?: Album.EMPTY
 
     private val photos = mutableListOf<Photo>()
 

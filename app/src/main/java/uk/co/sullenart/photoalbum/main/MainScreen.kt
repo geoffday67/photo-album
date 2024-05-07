@@ -41,113 +41,38 @@ import uk.co.sullenart.photoalbum.settings.SettingsScreen
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    viewModel: MainViewmodel = koinViewModel { parametersOf(navController) },
 ) {
-    var topBarVisible by remember { mutableStateOf(true) }
-
-    Scaffold(
-        /*topBar = {
-            PhotosTopBar(
-                onSettings = viewModel::onSettingsClicked,
-            )
-        },*/
+    /*Button(onClick = {
+    try {
+        val adminName = ComponentName(this@MainActivity, DeviceAdmin::class.java)
+        val dpm = getSystemService(DevicePolicyManager::class.java)
+        dpm.setLockTaskPackages(adminName, arrayOf(packageName))
+        Log.d("Photo", "Lock task mode enabled")
+    } catch (e: Exception) {
+        Log.e("Photo", "Error enabling lock task mode", e)
+    }
+}) {
+    Text("Lock task mode")
+}*/
+    NavHost(
+        navController = navController,
+        startDestination = "albums",
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize(),
-        ) {
-            /*Button(onClick = {
-            try {
-                val adminName = ComponentName(this@MainActivity, DeviceAdmin::class.java)
-                val dpm = getSystemService(DevicePolicyManager::class.java)
-                dpm.setLockTaskPackages(adminName, arrayOf(packageName))
-                Log.d("Photo", "Lock task mode enabled")
-            } catch (e: Exception) {
-                Log.e("Photo", "Error enabling lock task mode", e)
-            }
-        }) {
-            Text("Lock task mode")
-        }*/
-            NavHost(
+        composable("albums") {
+            AlbumsScreen(
                 navController = navController,
-                startDestination = "albums",
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None },
-            ) {
-                composable("albums") {
-                    topBarVisible = true
-                    AlbumsScreen(
-                        navController = navController,
-                    )
-                }
-                composable("photos/{albumId}") {
-                    //topBarVisible = true
-                    val albumId = it.arguments?.getString("albumId") ?: ""
-                    PhotosScreen(
-                        albumId = albumId,
-                        navController = navController,
-                    )
-                }
-                /*composable("settings") {
-                    topBarVisible = true
-                    SettingsScreen()
-                }*/
-            }
-            /*Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                NavigationBar {
-                    NavigationBarItem(selected = false, onClick = { }, icon = { Icon(Icons.Filled.Settings, contentDescription = null) }, label = { Text("One") })
-                    NavigationBarItem(selected = false, onClick = { }, icon = { Icon(Icons.Filled.Settings, contentDescription = null) }, label = { Text("Two") })
-                    NavigationBarItem(selected = false, onClick = { }, icon = { Icon(Icons.Filled.Settings, contentDescription = null) }, label = { Text("Three") })
-                }
-            }*/
+            )
+        }
+        composable("photos/{albumId}") {
+            val albumId = it.arguments?.getString("albumId") ?: ""
+            PhotosScreen(
+                albumId = albumId,
+                navController = navController,
+            )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PhotosTopBar(
-    onSettings: () -> Unit,
-) {
-    var infoChecked by remember { mutableStateOf(false) }
-
-    TopAppBar(
-        navigationIcon = {
-            IconButton(
-                onClick = { },
-            ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-            }
-        },
-        title = { Text("Photo Album") },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
-        actions = {
-            IconToggleButton(
-                checked = infoChecked,
-                onCheckedChange = { infoChecked = !infoChecked },
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                )
-            }
-            IconButton(
-                onClick = onSettings,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = null,
-                )
-            }
-        }
-    )
 }

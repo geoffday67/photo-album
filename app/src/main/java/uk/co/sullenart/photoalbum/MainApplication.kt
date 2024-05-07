@@ -28,7 +28,6 @@ import uk.co.sullenart.photoalbum.auth.RealmUser
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.google.GooglePhotos
-import uk.co.sullenart.photoalbum.main.MainViewmodel
 import uk.co.sullenart.photoalbum.photos.PhotosRepository
 import uk.co.sullenart.photoalbum.photos.PhotosViewmodel
 import uk.co.sullenart.photoalbum.photos.RealmPhoto
@@ -48,7 +47,6 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                 module {
                     viewModelOf(::AlbumsViewmodel)
                     viewModelOf(::PhotosViewmodel)
-                    viewModelOf(::MainViewmodel)
                     viewModelOf(::SettingsViewmodel)
                     singleOf(::GooglePhotos)
                     singleOf(::Auth)

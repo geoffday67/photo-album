@@ -7,4 +7,14 @@ data class Album(
     val id: String,
     val title: String,
     val itemCount: Int,
-)
+) {
+    companion object {
+        val EMPTY
+            get() =
+                Album(
+                    id = "",
+                    title = "",
+                    itemCount = 0,
+                )
+    }
+}

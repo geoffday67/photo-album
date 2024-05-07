@@ -16,46 +16,11 @@ class AlbumsRepository(
                 .map { it.toAlbum() }
         }
 
-    suspend fun clear() {
-        realm.write {
-            delete(RealmAlbum::class)
-        }
-    }
-
     suspend fun sync(albums: List<Album>) {
         realm.write {
             delete(RealmAlbum::class)
             albums.forEach {
                 copyToRealm(it.toRealm())
-            }
-        }
-    }
-
-    suspend fun store(albums: List<Album>) {
-        albums.forEach {
-            store(it)
-        }
-    }
-
-    suspend fun store(album: Album) {
-        realm.write {
-            copyToRealm(album.toRealm())
-            Timber.i("Album ${album.title} written to Realm")
-        }
-    }
-
-    suspend fun upsert(album: Album) {
-        realm.write {
-            // Is there a current record for this album?
-            val result = query<RealmAlbum>("id == $0", album.id).first().find()
-            if (result == null) {
-                // No, create a new record.
-                copyToRealm(album.toRealm())
-                Timber.d("Album ${album.title} not found, creating new record")
-            } else {
-                // Yes, update its properties, Realm will update the persisted record once outside the "write" scope.
-                result.copyFromAlbum(album)
-                Timber.d("Album ${result.title} updated")
             }
         }
     }

@@ -3,6 +3,7 @@ package uk.co.sullenart.photoalbum.photos
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,7 +11,17 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
@@ -27,6 +38,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
+import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.detail.DetailContent
 
 @Composable
@@ -43,13 +55,45 @@ fun PhotosScreen(
             getPhotoFromIndex = viewModel::getPhotoFromIndex,
         )
     } else {
-        PhotosContent(
-            state = LazyGridState(viewModel.firstIndex, viewModel.firstOffset),
-            photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
-            onPhotoClicked = viewModel::onPhotoClicked,
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            PhotosTopBar(
+                album = viewModel.album,
+                onBack = { navController.popBackStack() },
+            )
+            PhotosContent(
+                state = LazyGridState(viewModel.firstIndex, viewModel.firstOffset),
+                photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+                onPhotoClicked = viewModel::onPhotoClicked,
+            )
+        }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PhotosTopBar(
+    album: Album,
+    onBack: () -> Unit,
+) {
+    TopAppBar(
+        navigationIcon = {
+            IconButton(
+                onClick = onBack,
+            ) {
+                Icon(Icons.AutoMirrored.Default.ArrowBack, null)
+            }
+
+        },
+        title = { Text("${album.title} (${album.itemCount})") },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    )
+}
+
 
 @Composable
 private fun PhotosContent(
