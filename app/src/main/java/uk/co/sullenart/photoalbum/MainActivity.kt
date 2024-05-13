@@ -21,12 +21,6 @@ class MainActivity : ComponentActivity() {
         val height = resources.displayMetrics.heightPixels
         Timber.i("Screen size $width x $height")
 
-        with(WindowCompat.getInsetsController(window, window.decorView)) {
-            hide(WindowInsetsCompat.Type.statusBars())
-            hide(WindowInsetsCompat.Type.navigationBars())
-            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        }
-
         setContent {
             val navController = rememberNavController()
 

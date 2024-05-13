@@ -1,4 +1,4 @@
-package uk.co.sullenart.photoalbum.photos
+package uk.co.sullenart.photoalbum.items
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,12 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 
-class PhotosViewmodel(
-    photosRepository: PhotosRepository,
+class ItemsViewmodel(
+    itemsRepository: MediaItemsRepository,
     albumsRepository: AlbumsRepository,
     albumId: String,
 ) : ViewModel() {
@@ -19,28 +18,27 @@ class PhotosViewmodel(
     var currentIndex = 0
     var firstIndex: Int = 0
     var firstOffset = 0
-    val photoFlow = photosRepository.getPhotoFlowForAlbum(albumId)
+    val itemFlow = itemsRepository.getItemFlowForAlbum(albumId)
     val album = albumsRepository.getAlbum(albumId) ?: Album.EMPTY
 
-    private val photos = mutableListOf<Photo>()
+    private val items = mutableListOf<MediaItem>()
 
-    val photoCount: Int
-        get() = photos.size
+    val itemCount: Int
+        get() = items.size
 
     init {
         viewModelScope.launch {
-            photosRepository.getPhotoFlowForAlbum(albumId).collect {
-                Timber.d("${it.size} photos received")
-                photos.clear()
-                photos.addAll(it)
+            itemsRepository.getItemFlowForAlbum(albumId).collect {
+                items.clear()
+                items.addAll(it)
             }
         }
     }
 
-    fun onPhotoClicked(photo: Photo, index: Int, offset: Int) {
+    fun onItemClicked(item: MediaItem, index: Int, offset: Int) {
         firstIndex = index
         firstOffset = offset
-        currentIndex = photos.indexOf(photo)
+        currentIndex = items.indexOf(item)
         isDetail = true
     }
 
@@ -48,6 +46,6 @@ class PhotosViewmodel(
         isDetail = false
     }
 
-    fun getPhotoFromIndex(index: Int): Photo =
-        photos[index]
+    fun getItemFromIndex(index: Int): MediaItem =
+        items[index]
 }

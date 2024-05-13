@@ -10,16 +10,18 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
+import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 import uk.co.sullenart.photoalbum.auth.Auth
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
-import uk.co.sullenart.photoalbum.photos.PhotosRepository
+import uk.co.sullenart.photoalbum.items.MediaItemsRepository
 
 class SettingsViewmodel(
     private val auth: Auth,
     private val userRepository: UserRepository,
     private val backgroundFetcher: BackgroundFetcher,
-    private val photosRepository: PhotosRepository,
+    private val photosRepository: MediaItemsRepository,
+    private val albumsRepository: AlbumsRepository,
 ) : ViewModel() {
     val userFlow = userRepository.userFlow
     var loading by mutableStateOf(false)
@@ -60,8 +62,12 @@ class SettingsViewmodel(
         }
     }
 
-    fun clearCaches() {
-      photosRepository.clearCaches()
+    fun clearData() {
+        viewModelScope.launch {
+            photosRepository.clear()
+            albumsRepository.clear()
+        }
+        photosRepository.clearCaches()
     }
 
     companion object {

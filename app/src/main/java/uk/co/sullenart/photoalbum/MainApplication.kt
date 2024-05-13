@@ -1,6 +1,9 @@
 package uk.co.sullenart.photoalbum
 
 import android.app.Application
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -9,6 +12,7 @@ import coil3.disk.directory
 import coil3.imageLoader
 import coil3.memory.MemoryCache
 import coil3.util.Logger
+import com.jakewharton.threetenabp.AndroidThreeTen
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import org.koin.android.ext.koin.androidContext
@@ -27,15 +31,19 @@ import uk.co.sullenart.photoalbum.auth.AuthInterceptor
 import uk.co.sullenart.photoalbum.auth.RealmUser
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
+import uk.co.sullenart.photoalbum.background.RefreshWorker
 import uk.co.sullenart.photoalbum.google.GooglePhotos
-import uk.co.sullenart.photoalbum.photos.PhotosRepository
-import uk.co.sullenart.photoalbum.photos.PhotosViewmodel
-import uk.co.sullenart.photoalbum.photos.RealmPhoto
+import uk.co.sullenart.photoalbum.items.MediaItemsRepository
+import uk.co.sullenart.photoalbum.items.ItemsViewmodel
+import uk.co.sullenart.photoalbum.items.RealmItem
 import uk.co.sullenart.photoalbum.settings.SettingsViewmodel
+import java.util.concurrent.TimeUnit
 
 class MainApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
+
+        AndroidThreeTen.init(this)
 
         if (BuildConfig.DEBUG) {
             Timber.plant(DebugTree())
@@ -46,14 +54,14 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
             modules(
                 module {
                     viewModelOf(::AlbumsViewmodel)
-                    viewModelOf(::PhotosViewmodel)
+                    viewModelOf(::ItemsViewmodel)
                     viewModelOf(::SettingsViewmodel)
                     singleOf(::GooglePhotos)
                     singleOf(::Auth)
                     singleOf(::AuthInterceptor)
                     factoryOf(::UserRepository)
                     factoryOf(::AlbumsRepository)
-                    factoryOf(::PhotosRepository)
+                    factoryOf(::MediaItemsRepository)
 
                     singleOf(::BackgroundFetcher)
                     /*single(createdAtStart = true) {
@@ -66,7 +74,7 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
 
                     single<Realm> {
                         val config = RealmConfiguration.Builder(
-                            schema = setOf(RealmAlbum::class, RealmUser::class, RealmPhoto::class),
+                            schema = setOf(RealmAlbum::class, RealmUser::class, RealmItem::class),
                         )
                             .deleteRealmIfMigrationNeeded()
                             .build()
@@ -77,6 +85,24 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                 }
             )
         }
+
+        startRefreshWorker()
+    }
+
+    private fun startRefreshWorker() {
+        //Timber.d("WorkManager initialised: ${WorkManager.isInitialized()}")
+        //return
+
+        val request = PeriodicWorkRequestBuilder<RefreshWorker>(1, TimeUnit.HOURS)
+            .setInitialDelay(1, TimeUnit.HOURS)
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "REFRESH_WORK",
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                request,
+            )
     }
 
     private val coilLogger = object : Logger {

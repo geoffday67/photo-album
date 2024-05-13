@@ -4,13 +4,12 @@ import kotlinx.coroutines.delay
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 import uk.co.sullenart.photoalbum.google.GooglePhotos
-import uk.co.sullenart.photoalbum.photos.Photo
-import uk.co.sullenart.photoalbum.photos.PhotosRepository
+import uk.co.sullenart.photoalbum.items.MediaItemsRepository
 
 class BackgroundFetcher(
     private val googlePhotos: GooglePhotos,
     private val albumsRepository: AlbumsRepository,
-    private val photosRepository: PhotosRepository,
+    private val itemsRepository: MediaItemsRepository,
 ) {
     suspend fun start() {
         while (true) {
@@ -21,7 +20,7 @@ class BackgroundFetcher(
     }
 
     suspend fun refresh(
-        progress: ((Int, Int) -> Unit)? = null,
+        progress: ((total: Int, processed: Int) -> Unit)? = null,
     ) {
         val albums = googlePhotos.getSharedAlbums() ?: run {
             Timber.e("Failed to get shared album list from Google")
@@ -30,21 +29,25 @@ class BackgroundFetcher(
         Timber.d("Fetched ${albums.size} shared albums")
         albumsRepository.sync(albums)
 
+        val totalItems = albums.fold(0) { acc, element -> acc + element.itemCount }
+        var itemsProcessed = 0
+
         // TODO Decide which albums to get the photos for, currently it fetches photos if the number of photos in the album has changed.
 
         albums.forEach { album ->
-            if (album.itemCount == photosRepository.getCountForAlbum(album.id)) {
+            if (album.itemCount == itemsRepository.getCountForAlbum(album.id)) {
                 Timber.d("Skipping album ${album.title}, item count the same (${album.itemCount})")
                 return@forEach
             }
 
-            val photosForAlbum = googlePhotos.getPhotosForAlbum(album)
-                ?.map { it.copy(albumId = album.id) } ?: run {
-                Timber.e("Failed to get photos from Google for album ${album.title}")
+            val mediaForAlbum = googlePhotos.getMediaForAlbum(album) ?: run {
+                Timber.e("Failed to get items from Google for album ${album.title}")
                 return@forEach
             }
-            photosRepository.sync(album.id, photosForAlbum, progress)
-            Timber.d("Fetched ${photosForAlbum.size} photos for album ${album.title}")
+            itemsRepository.sync(album.id, mediaForAlbum) {
+                progress?.invoke(totalItems, ++itemsProcessed)
+            }
+            Timber.d("Fetched ${mediaForAlbum.size} items for album ${album.title}")
         }
     }
 }

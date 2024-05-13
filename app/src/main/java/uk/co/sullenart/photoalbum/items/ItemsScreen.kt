@@ -1,4 +1,4 @@
-package uk.co.sullenart.photoalbum.photos
+package uk.co.sullenart.photoalbum.items
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -23,8 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -36,37 +32,36 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.detail.DetailContent
 
 @Composable
-fun PhotosScreen(
+fun ItemsScreen(
     albumId: String,
     navController: NavController,
-    viewModel: PhotosViewmodel = koinViewModel { parametersOf(albumId, navController) },
+    viewModel: ItemsViewmodel = koinViewModel { parametersOf(albumId, navController) },
 ) {
     if (viewModel.isDetail) {
         BackHandler(onBack = viewModel::onDetailBack)
         DetailContent(
-            pageCount = viewModel.photoCount,
+            pageCount = viewModel.itemCount,
             initialPage = viewModel.currentIndex,
-            getPhotoFromIndex = viewModel::getPhotoFromIndex,
+            getItemFromIndex = viewModel::getItemFromIndex,
         )
     } else {
         Column(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            PhotosTopBar(
+            ItemsTopBar(
                 album = viewModel.album,
                 onBack = { navController.popBackStack() },
             )
-            PhotosContent(
+            ItemsContent(
                 state = LazyGridState(viewModel.firstIndex, viewModel.firstOffset),
-                photos = viewModel.photoFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
-                onPhotoClicked = viewModel::onPhotoClicked,
+                items = viewModel.itemFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+                onItemClicked = viewModel::onItemClicked,
             )
         }
     }
@@ -74,7 +69,7 @@ fun PhotosScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PhotosTopBar(
+private fun ItemsTopBar(
     album: Album,
     onBack: () -> Unit,
 ) {
@@ -96,10 +91,10 @@ private fun PhotosTopBar(
 
 
 @Composable
-private fun PhotosContent(
+private fun ItemsContent(
     state: LazyGridState,
-    photos: List<Photo>,
-    onPhotoClicked: (Photo, Int, Int) -> Unit,
+    items: List<MediaItem>,
+    onItemClicked: (MediaItem, Int, Int) -> Unit,
 ) {
     // TODO Check for recomposition
 
@@ -115,12 +110,12 @@ private fun PhotosContent(
             horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.paddingS)),
         ) {
             items(
-                count = photos.size,
-                key = { photos[it].id },
+                count = items.size,
+                key = { items[it].id },
             ) {
-                PhotoItem(
-                    photo = photos[it],
-                    onClicked = { onPhotoClicked(photos[it], state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset) }
+                MediaItem(
+                    item = items[it],
+                    onClicked = { onItemClicked(items[it], state.firstVisibleItemIndex, state.firstVisibleItemScrollOffset) },
                 )
             }
         }
@@ -128,13 +123,13 @@ private fun PhotosContent(
 }
 
 @Composable
-private fun PhotoItem(
-    photo: Photo,
+private fun MediaItem(
+    item: MediaItem,
     onClicked: () -> Unit,
 ) {
     val request = ImageRequest.Builder(LocalContext.current)
-        .data(photo.usableUrl)
-        .diskCacheKey(photo.id)
+        .data(item.usableUrl)
+        .diskCacheKey(item.id)
         .listener(resultListener)
         .build()
     AsyncImage(

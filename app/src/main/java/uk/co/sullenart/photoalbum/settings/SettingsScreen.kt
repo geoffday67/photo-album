@@ -80,7 +80,7 @@ fun SettingsScreen(
                     isSignedIn = user != null,
                     refresh = viewModel::refresh,
                 )
-                ClearButton(viewModel::clearCaches)
+                ClearButton(viewModel::clearData)
                 DialogButtons(onDismiss)
             }
         }
@@ -136,7 +136,7 @@ fun SettingsScreen(
                     .widthIn(200.dp),
                 onClick = onClick
             ) {
-                Text("Clear image caches")
+                Text("Clear data")
             }
         }
     }

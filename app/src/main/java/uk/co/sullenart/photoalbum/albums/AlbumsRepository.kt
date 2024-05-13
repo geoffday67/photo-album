@@ -1,7 +1,6 @@
 package uk.co.sullenart.photoalbum.albums
 
 import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.copyFromRealm
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,6 +21,12 @@ class AlbumsRepository(
             albums.forEach {
                 copyToRealm(it.toRealm())
             }
+        }
+    }
+
+    suspend fun clear() {
+        realm.write {
+            delete(RealmAlbum::class)
         }
     }
 

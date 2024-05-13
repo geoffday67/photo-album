@@ -1,5 +1,6 @@
 package uk.co.sullenart.photoalbum.detail
 
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -24,24 +25,33 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.FileDataSource
+import androidx.media3.datasource.RawResourceDataSource
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.size.Precision
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
+import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
-import uk.co.sullenart.photoalbum.photos.Photo
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import uk.co.sullenart.photoalbum.items.MediaItem
+import uk.co.sullenart.photoalbum.items.PhotoItem
+import uk.co.sullenart.photoalbum.items.VideoItem
+import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DetailContent(
     pageCount: Int,
     initialPage: Int,
-    getPhotoFromIndex: (Int) -> Photo,
+    getItemFromIndex: (Int) -> MediaItem,
 ) {
     val pagerState = rememberPagerState(
         initialPage = initialPage,
@@ -57,10 +67,16 @@ fun DetailContent(
             modifier = Modifier
                 .fillMaxSize(),
         ) {
-            val photo = getPhotoFromIndex(index)
-            DetailItem(photo) { infoVisible = !infoVisible }
-            if (infoVisible) {
-                Info(photo)
+            when (val item = getItemFromIndex(index)) {
+                is PhotoItem -> {
+                    PhotoItem(item) { infoVisible = !infoVisible }
+                    if (infoVisible) {
+                        PhotoInfo(item)
+                    }
+                }
+                is VideoItem -> {
+                    VideoItem(item)
+                }
             }
         }
     }
@@ -68,8 +84,8 @@ fun DetailContent(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DetailItem(
-    photo: Photo,
+private fun PhotoItem(
+    photo: PhotoItem,
     onLongClick: () -> Unit,
 ) {
     Box(
@@ -101,8 +117,8 @@ private fun DetailItem(
 }
 
 @Composable
-private fun Info(
-    photo: Photo,
+private fun PhotoInfo(
+    photo: PhotoItem,
 ) {
     Box(
         modifier = Modifier
@@ -136,6 +152,41 @@ private fun Info(
                 }
             }
         }
+    }
+}
+
+@androidx.annotation.OptIn(UnstableApi::class)
+@Composable
+fun VideoItem(
+    video: VideoItem,
+) {
+    var player: ExoPlayer? = remember { null }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        AndroidView(
+            factory = {
+                val uri = Uri.fromFile(File(video.path))
+                val item = androidx.media3.common.MediaItem.fromUri(uri)
+                player = ExoPlayer.Builder(it).build().apply {
+                    setMediaItem(item)
+                    playWhenReady = true
+                }
+                val view = PlayerView(it).apply {
+                    this.player = player
+                    controllerAutoShow = false
+                    hideController()
+                }
+                player?.prepare()
+                view
+            },
+            onRelease = {
+                player?.release()
+            },
+        )
     }
 }
 

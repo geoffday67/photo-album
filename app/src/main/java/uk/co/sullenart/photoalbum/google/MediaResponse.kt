@@ -1,8 +1,11 @@
 package uk.co.sullenart.photoalbum.google
 
 import kotlinx.serialization.Serializable
-import uk.co.sullenart.photoalbum.photos.Photo
-import java.time.Instant
+import org.threeten.bp.Instant
+import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.items.MediaItem
+import uk.co.sullenart.photoalbum.items.PhotoItem
+import uk.co.sullenart.photoalbum.items.VideoItem
 
 @Serializable
 data class MediaResponse(
@@ -20,6 +23,7 @@ data class MediaResponse(
     data class Metadata(
         val creationTime: String?,
         val photo: PhotoData?,
+        val video: VideoData?,
     )
 
     @Serializable
@@ -27,19 +31,47 @@ data class MediaResponse(
         val cameraMake: String?,
         val cameraModel: String?,
     )
+
+    @Serializable
+    data class VideoData(
+        val cameraMake: String?,
+        val cameraModel: String?,
+    )
 }
 
-fun MediaResponse.MediaItemResponse.toPhoto(): Photo {
-    var camera = this.mediaMetadata?.photo?.cameraMake.orEmpty()
-    if (camera.isNotBlank()) {
-        camera += " "
-    }
-    camera += this.mediaMetadata?.photo?.cameraModel.orEmpty()
+fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
+    when {
+        this.mediaMetadata?.photo != null -> {
+            var camera = this.mediaMetadata.photo.cameraMake.orEmpty()
+            if (camera.isNotBlank()) {
+                camera += " "
+            }
+            camera += this.mediaMetadata.photo.cameraModel.orEmpty()
 
-    return Photo(
-        id = this.id.orEmpty(),
-        url = this.baseUrl.orEmpty(),
-        creationTime = Instant.parse(this.mediaMetadata?.creationTime.orEmpty()),
-        camera = camera,
-    )
+            return PhotoItem(
+                id = this.id.orEmpty(),
+                albumId = album.id,
+                url = this.baseUrl.orEmpty(),
+                creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
+                camera = camera,
+            )
+        }
+        this.mediaMetadata?.video != null -> {
+            var camera = this.mediaMetadata.video.cameraMake.orEmpty()
+            if (camera.isNotBlank()) {
+                camera += " "
+            }
+            camera += this.mediaMetadata.video.cameraModel.orEmpty()
+
+            return VideoItem(
+                id = this.id.orEmpty(),
+                albumId = album.id,
+                url = this.baseUrl.orEmpty(),
+                creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
+                camera = camera,
+                path = "",
+            )
+        }
+        else -> return PhotoItem.EMPTY
+    }
 }

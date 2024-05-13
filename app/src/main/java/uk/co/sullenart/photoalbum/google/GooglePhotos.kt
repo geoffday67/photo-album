@@ -1,10 +1,16 @@
 package uk.co.sullenart.photoalbum.google
 
+import android.content.Context
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.coroutines.executeAsync
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.http.Body
@@ -13,10 +19,16 @@ import retrofit2.http.POST
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.auth.AuthInterceptor
-import uk.co.sullenart.photoalbum.photos.Photo
+import uk.co.sullenart.photoalbum.items.MediaItem
+import java.io.BufferedInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
+
 
 class GooglePhotos(
     private val interceptor: AuthInterceptor,
+    private val context: Context,
 ) {
     private interface Service {
         @GET("/v1/albums")
@@ -67,8 +79,8 @@ class GooglePhotos(
             null
         }
 
-    suspend fun getPhotosForAlbum(album: Album): List<Photo>? {
-        val result: MutableList<Photo> = mutableListOf()
+    suspend fun getMediaForAlbum(album: Album): List<MediaItem> {
+        val result: MutableList<MediaItem> = mutableListOf()
         var nextPageToken: String? = null
 
         try {
@@ -81,7 +93,7 @@ class GooglePhotos(
                 val response = service.mediaSearch(request)
                 result.addAll(response
                     .mediaItems.orEmpty()
-                    .map { it.toPhoto() }
+                    .map { it.toMediaItem(album) }
                 )
                 nextPageToken = response.nextPageToken
             } while (nextPageToken != null)
@@ -90,5 +102,26 @@ class GooglePhotos(
         }
 
         return result
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    suspend fun saveMediaFile(
+        sourceUrl: String,
+        destinationPath: String,
+    ) {
+        val request = Request.Builder()
+            .url(sourceUrl)
+            .build()
+        // TODO Re-use single client.
+        val client = OkHttpClient.Builder()
+            .build()
+        val response = client.newCall(request).executeAsync()
+        withContext(Dispatchers.IO) {
+            response.body.byteStream().use { byteStream ->
+                FileOutputStream(destinationPath).use { fileStream ->
+                    byteStream.copyTo(fileStream)
+                }
+            }
+        }
     }
 }
