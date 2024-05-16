@@ -17,6 +17,7 @@ data class MediaResponse(
         val id: String?,
         val baseUrl: String?,
         val mediaMetadata: Metadata?,
+        val mimeType: String?,
     )
 
     @Serializable
@@ -54,6 +55,7 @@ fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
                 url = this.baseUrl.orEmpty(),
                 creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
                 camera = camera,
+                mimeType = this.mimeType.orEmpty(),
             )
         }
         this.mediaMetadata?.video != null -> {
@@ -69,6 +71,7 @@ fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
                 url = this.baseUrl.orEmpty(),
                 creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
                 camera = camera,
+                mimeType = this.mimeType.orEmpty(),
                 path = "",
             )
         }

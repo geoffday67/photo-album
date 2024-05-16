@@ -36,10 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import uk.co.sullenart.photoalbum.R
+import uk.co.sullenart.photoalbum.items.MediaItem
 import uk.co.sullenart.photoalbum.settings.SettingsScreen
 
 @Composable
@@ -87,6 +90,16 @@ private fun Content(
             )
         }
     }
+}
+
+@Composable
+private fun TestItem(
+    item: MediaItem,
+) {
+    AsyncImage(
+        model = item,
+        contentDescription = null,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

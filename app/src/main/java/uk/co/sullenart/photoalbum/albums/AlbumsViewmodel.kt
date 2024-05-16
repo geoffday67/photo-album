@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
+import uk.co.sullenart.photoalbum.items.MediaItemsRepository
 
 class AlbumsViewmodel(
     albumsRepository: AlbumsRepository,

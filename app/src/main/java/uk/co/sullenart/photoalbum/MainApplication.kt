@@ -7,8 +7,6 @@ import androidx.work.WorkManager
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import coil3.disk.DiskCache
-import coil3.disk.directory
 import coil3.imageLoader
 import coil3.memory.MemoryCache
 import coil3.util.Logger
@@ -32,9 +30,11 @@ import uk.co.sullenart.photoalbum.auth.RealmUser
 import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.background.RefreshWorker
+import uk.co.sullenart.photoalbum.coil.ItemFetcher
 import uk.co.sullenart.photoalbum.google.GooglePhotos
-import uk.co.sullenart.photoalbum.items.MediaItemsRepository
+import uk.co.sullenart.photoalbum.items.ItemUtils
 import uk.co.sullenart.photoalbum.items.ItemsViewmodel
+import uk.co.sullenart.photoalbum.items.MediaItemsRepository
 import uk.co.sullenart.photoalbum.items.RealmItem
 import uk.co.sullenart.photoalbum.settings.SettingsViewmodel
 import java.util.concurrent.TimeUnit
@@ -62,15 +62,9 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
                     factoryOf(::UserRepository)
                     factoryOf(::AlbumsRepository)
                     factoryOf(::MediaItemsRepository)
-
+                    singleOf(::ItemUtils)
+                    factoryOf(::ItemFetcher)
                     singleOf(::BackgroundFetcher)
-                    /*single(createdAtStart = true) {
-                        BackgroundFetcher(get(), get(), get(), get(), get()).apply {
-                            GlobalScope.launch {
-                                start()
-                            }
-                        }
-                    }*/
 
                     single<Realm> {
                         val config = RealmConfiguration.Builder(
@@ -115,16 +109,12 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         return ImageLoader.Builder(this)
+            .components {
+                add(ItemFetcher.Factory())
+            }
             .memoryCache {
                 MemoryCache.Builder()
                     .maxSizePercent(context, 0.25)
-                    .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    .directory(cacheDir.resolve("image_cache"))
-                    // TODO Configure a large cache size.
-                    .maxSizeBytes(1024 * 1024 * 1024)
                     .build()
             }
             .logger(coilLogger)

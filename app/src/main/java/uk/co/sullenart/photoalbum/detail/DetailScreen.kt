@@ -75,7 +75,10 @@ fun DetailContent(
                     }
                 }
                 is VideoItem -> {
-                    VideoItem(item)
+                    VideoItem(item) { infoVisible = !infoVisible }
+                    if (infoVisible) {
+                        VideoInfo(item)
+                    }
                 }
             }
         }
@@ -93,13 +96,6 @@ private fun PhotoItem(
             .fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        val request = ImageRequest
-            .Builder(LocalContext.current)
-            .data(photo.usableUrl)
-            .diskCacheKey(photo.id)
-            .precision(Precision.EXACT)
-            .listener(resultListener)
-            .build()
         AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,7 +105,7 @@ private fun PhotoItem(
                     onClick = {},
                     onLongClick = onLongClick,
                 ),
-            model = request,
+            model = photo,
             contentDescription = null,
             contentScale = ContentScale.Fit,
         )
@@ -155,23 +151,32 @@ private fun PhotoInfo(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun VideoItem(
     video: VideoItem,
+    onLongClick: () -> Unit,
 ) {
     var player: ExoPlayer? = remember { null }
 
     Box(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .combinedClickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = {},
+                onLongClick = { Timber.d("Video long click") },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         AndroidView(
             factory = {
                 val uri = Uri.fromFile(File(video.path))
                 val item = androidx.media3.common.MediaItem.fromUri(uri)
-                player = ExoPlayer.Builder(it).build().apply {
+                player = ExoPlayer.Builder(it)
+                    .build().apply {
                     setMediaItem(item)
                     playWhenReady = true
                 }
@@ -190,10 +195,41 @@ fun VideoItem(
     }
 }
 
-@OptIn(ExperimentalCoilApi::class)
-private val resultListener = object : ImageRequest.Listener {
-    override fun onSuccess(request: ImageRequest, result: SuccessResult) {
-        // Timber.d("Loaded full image from ${result.dataSource} using key ${result.diskCacheKey}")
-        Timber.i("Loaded image ${result.image.width} x ${result.image.height} from ${result.dataSource}")
+@Composable
+private fun VideoInfo(
+    video: VideoItem,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .padding(dimensionResource(R.dimen.paddingM)),
+            colors = cardColors(
+                containerColor = Color.Unspecified.copy(alpha = 0.2f),
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(dimensionResource(R.dimen.paddingM))
+            ) {
+                Text(
+                    text = DateTimeFormatter
+                        .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+                        .withZone(ZoneId.systemDefault())
+                        .format(video.creationTime),
+                    color = Color.White,
+                )
+                if (video.camera.isNotEmpty()) {
+                    Text(
+                        text = video.camera,
+                        color = Color.White,
+                    )
+                }
+            }
+        }
     }
 }

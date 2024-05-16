@@ -19,12 +19,13 @@ import timber.log.Timber
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import java.io.File
 import java.nio.file.Files
+import kotlin.io.path.deleteExisting
 
 class MediaItemsRepository(
     private val realm: Realm,
-    private val context: Context,
     private val imageLoader: ImageLoader,
     private val googlePhotos: GooglePhotos,
+    private val itemUtils: ItemUtils,
 ) {
     fun getItemFlowForAlbum(albumId: String): Flow<List<MediaItem>> =
         realm.query<RealmItem>("albumId == $0", albumId).asFlow().map {
@@ -83,51 +84,27 @@ class MediaItemsRepository(
         }
     }
 
-    private fun isInCache(photo: MediaItem): Boolean {
-        val snapshot = imageLoader.diskCache?.openSnapshot(photo.id)
-        snapshot?.close()
-        return snapshot != null
+    private fun isInCache(item: MediaItem): Boolean {
+        val destination = itemUtils.getPath(item)
+        return File(destination).exists()
     }
 
-    @OptIn(ExperimentalCoilApi::class)
     private suspend fun addToCache(item: MediaItem) {
-        val request = ImageRequest.Builder(context)
-            .data(item.usableUrl)
-            .diskCacheKey(item.id)
-            .memoryCachePolicy(CachePolicy.DISABLED)
-            .decoderFactory { _, _, _ ->
-                Decoder { DecodeResult(ColorDrawable(Color.BLACK).asCoilImage(), false) }
-            }
-            .build()
-        imageLoader.execute(request)
-
-        // If it's a video then also download the video file into app storage.
-        // TODO Use external storage.
-        if (item is VideoItem) {
-            val dest = "${context.filesDir}${File.separator}${item.id}.mp4"
-            googlePhotos.saveMediaFile(item.downloadUrl, dest)
-            item.path = dest
-            Timber.d("Video downloaded to [${item.path}]")
-        }
-
-        Timber.d("Item loaded into cache [${item.id}]")
+        val destination = itemUtils.getPath(item)
+        googlePhotos.saveMediaFile(item.usableUrl, destination)
+        Timber.d("Media downloaded to [$destination]")
     }
 
     private fun removeFromCache(item: MediaItem) {
-        imageLoader.diskCache?.run {
-            remove(item.id)
-            Timber.d("Item removed from cache [${item.id}]")
-        }
-
-        if (item is VideoItem) {
-            val dest = "${context.filesDir}${File.separator}${item.id}.mp4"
-            File(dest).delete()
-        }
+        val destination = itemUtils.getPath(item)
+        File(destination).delete()
+        Timber.d("Media deleted at [$destination]")
     }
 
     fun clearCaches() {
-        imageLoader.diskCache?.clear()
-        imageLoader.memoryCache?.clear()
-        Timber.d("Caches cleared")
+        File(itemUtils.getMediaPath()).listFiles()?.forEach {
+            it.delete()
+        }
+        Timber.d("Cache cleared")
     }
 }

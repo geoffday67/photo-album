@@ -29,6 +29,7 @@ class RealmItem : RealmObject {
     var creationTime: String = ""
     var camera: String = ""
     var path: String = ""
+    var mimeType: String = ""
 }
 
 fun RealmItem.copyFromItem(source: MediaItem) {
@@ -44,6 +45,7 @@ fun RealmItem.copyFromItem(source: MediaItem) {
         is PhotoItem -> ""
         is VideoItem -> source.path
     }
+    this.mimeType = source.mimeType
 }
 
 fun MediaItem.toRealmItem() =
@@ -61,6 +63,7 @@ fun MediaItem.toRealmItem() =
             is PhotoItem -> ""
             is VideoItem -> this@toRealmItem.path
         }
+        mimeType = this@toRealmItem.mimeType
     }
 
 fun RealmItem.toMediaItem(): MediaItem? =
@@ -71,6 +74,7 @@ fun RealmItem.toMediaItem(): MediaItem? =
             url = this@toMediaItem.url,
             creationTime = Instant.parse(this@toMediaItem.creationTime),
             camera = this@toMediaItem.camera,
+            mimeType = this@toMediaItem.mimeType,
         )
         MediaType.VIDEO -> VideoItem(
             id = this@toMediaItem.id,
@@ -79,6 +83,7 @@ fun RealmItem.toMediaItem(): MediaItem? =
             creationTime = Instant.parse(this@toMediaItem.creationTime),
             camera = this@toMediaItem.camera,
             path = this@toMediaItem.path,
+            mimeType = this@toMediaItem.mimeType,
         )
         else -> {
             Timber.e("Unknown media type: ${this@toMediaItem.type}")

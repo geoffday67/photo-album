@@ -1,6 +1,8 @@
 package uk.co.sullenart.photoalbum.items
 
+import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -22,6 +25,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -30,11 +35,16 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
+import org.koin.androidx.compose.get
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
+import org.koin.java.KoinJavaComponent.get
+import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.detail.DetailContent
+import java.io.File
 
 @Composable
 fun ItemsScreen(
@@ -59,7 +69,7 @@ fun ItemsScreen(
                 onBack = { navController.popBackStack() },
             )
             ItemsContent(
-                state = LazyGridState(viewModel.firstIndex, viewModel.firstOffset),
+                state = rememberLazyGridState(viewModel.firstIndex, viewModel.firstOffset),
                 items = viewModel.itemFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
                 onItemClicked = viewModel::onItemClicked,
             )
@@ -127,23 +137,12 @@ private fun MediaItem(
     item: MediaItem,
     onClicked: () -> Unit,
 ) {
-    val request = ImageRequest.Builder(LocalContext.current)
-        .data(item.usableUrl)
-        .diskCacheKey(item.id)
-        .listener(resultListener)
-        .build()
     AsyncImage(
         modifier = Modifier
             .clickable { onClicked() }
             .aspectRatio(1.0f),
-        model = request,
+        model = item,
         contentDescription = null,
         contentScale = ContentScale.Crop,
     )
-}
-
-private val resultListener = object : ImageRequest.Listener {
-    override fun onSuccess(request: ImageRequest, result: SuccessResult) {
-        //Timber.d("Loaded image from ${result.dataSource} using key ${result.diskCacheKey}")
-    }
 }
