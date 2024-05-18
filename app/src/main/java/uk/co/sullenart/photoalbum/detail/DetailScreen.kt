@@ -2,6 +2,7 @@ package uk.co.sullenart.photoalbum.detail
 
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import org.koin.compose.koinInject
 import org.threeten.bp.ZoneId
@@ -55,7 +59,6 @@ fun DetailContent(
         pageCount = { pageCount },
     )
 
-    var infoVisible by remember { mutableStateOf(false) }
 
     HorizontalPager(
         state = pagerState,
@@ -66,19 +69,13 @@ fun DetailContent(
         ) {
             when (val item = getItemFromIndex(index)) {
                 is PhotoItem -> {
-                    PhotoItem(item) { infoVisible = !infoVisible }
-                    if (infoVisible) {
-                        PhotoInfo(item)
-                    }
+                    PhotoItem(item)
                 }
                 is VideoItem -> {
                     VideoDetail(
                         video = item,
-                        onLongClick = { infoVisible = !infoVisible },
+                        onLongClick = { },
                     )
-                    if (infoVisible) {
-                        VideoInfo(item)
-                    }
                 }
             }
         }
@@ -89,25 +86,29 @@ fun DetailContent(
 @Composable
 private fun PhotoItem(
     photo: PhotoItem,
-    onLongClick: () -> Unit,
 ) {
+    var infoVisible by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        val request = ImageRequest.Builder(LocalContext.current)
-            .data(photo)
-            .setParameter(
-                key = "type",
-                value = "detail",
-                memoryCacheKey = photo.id,
-            )
-            //.memoryCacheKey(item.id)
-            .listener { _, result ->
-                Timber.d("Fetch image from ${result.dataSource} for id ${photo.id}")
-            }
-            .build()
+        // Get the context separately so we can "remember" the image request.
+        val context = LocalContext.current
+        val request = remember {
+            ImageRequest.Builder(context)
+                .data(photo)
+                .setParameter(
+                    key = "type",
+                    value = "detail",
+                )
+                .memoryCacheKey(photo.id)
+                .listener { _, result ->
+                    Timber.d("Fetch image from ${result.dataSource} for id ${photo.id}")
+                }
+                .build()
+        }
         AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
@@ -115,12 +116,15 @@ private fun PhotoItem(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                     onClick = {},
-                    onLongClick = onLongClick,
+                    onLongClick = { infoVisible = !infoVisible },
                 ),
             model = request,
             contentDescription = null,
             contentScale = ContentScale.Fit,
         )
+        if (infoVisible) {
+            PhotoInfo(photo)
+        }
     }
 }
 

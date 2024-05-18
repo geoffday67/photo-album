@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -128,19 +129,20 @@ private fun MediaItem(
     item: MediaItem,
     onClicked: () -> Unit,
 ) {
-    // TODO Check why the images are loaded when leaving screen.
-    val request = ImageRequest.Builder(LocalContext.current)
-        .data(item)
-        .setParameter(
-            key = "type",
-            value = "thumbnail",
-            memoryCacheKey = item.id,
-        )
-        .memoryCacheKey(item.id)
-        .listener { _, result ->
-            Timber.d("Fetch image from ${result.dataSource} for id ${item.id}")
-        }
-        .build()
+    val context = LocalContext.current
+    val request = remember {
+        ImageRequest.Builder(context)
+            .data(item)
+            .setParameter(
+                key = "type",
+                value = "thumbnail",
+            )
+            .memoryCacheKey(item.id)
+            .listener { _, result ->
+                Timber.d("Fetch image from ${result.dataSource} for id ${item.id}")
+            }
+            .build()
+    }
 
     AsyncImage(
         modifier = Modifier
