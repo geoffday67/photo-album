@@ -14,8 +14,11 @@ class ItemUtils(
         Timber.d("Media directory created")
     }
 
-    fun getPath(item: MediaItem): String =
-        "$root${File.separator}${item.id}.dat"
+    fun getThumbnailFilename(item: MediaItem): String =
+        "$root${File.separator}${item.id}-thumbnail.dat"
+
+    fun getDetailFilename(item: MediaItem): String =
+        "$root${File.separator}${item.id}-detail.dat"
 
     fun getMediaPath() : String = root
 }

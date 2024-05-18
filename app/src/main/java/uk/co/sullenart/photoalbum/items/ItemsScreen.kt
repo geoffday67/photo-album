@@ -1,8 +1,6 @@
 package uk.co.sullenart.photoalbum.items
 
-import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,26 +23,19 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import org.koin.androidx.compose.get
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
-import org.koin.java.KoinJavaComponent.get
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.detail.DetailContent
-import java.io.File
 
 @Composable
 fun ItemsScreen(
@@ -137,11 +128,25 @@ private fun MediaItem(
     item: MediaItem,
     onClicked: () -> Unit,
 ) {
+    // TODO Check why the images are loaded when leaving screen.
+    val request = ImageRequest.Builder(LocalContext.current)
+        .data(item)
+        .setParameter(
+            key = "type",
+            value = "thumbnail",
+            memoryCacheKey = item.id,
+        )
+        .memoryCacheKey(item.id)
+        .listener { _, result ->
+            Timber.d("Fetch image from ${result.dataSource} for id ${item.id}")
+        }
+        .build()
+
     AsyncImage(
         modifier = Modifier
             .clickable { onClicked() }
             .aspectRatio(1.0f),
-        model = item,
+        model = request,
         contentDescription = null,
         contentScale = ContentScale.Crop,
     )

@@ -1,15 +1,5 @@
 package uk.co.sullenart.photoalbum.items
 
-import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import coil3.ImageLoader
-import coil3.annotation.ExperimentalCoilApi
-import coil3.asCoilImage
-import coil3.decode.DecodeResult
-import coil3.decode.Decoder
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
@@ -18,12 +8,9 @@ import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import java.io.File
-import java.nio.file.Files
-import kotlin.io.path.deleteExisting
 
 class MediaItemsRepository(
     private val realm: Realm,
-    private val imageLoader: ImageLoader,
     private val googlePhotos: GooglePhotos,
     private val itemUtils: ItemUtils,
 ) {
@@ -85,20 +72,23 @@ class MediaItemsRepository(
     }
 
     private fun isInCache(item: MediaItem): Boolean {
-        val destination = itemUtils.getPath(item)
-        return File(destination).exists()
+        val thumbExists = File(itemUtils.getThumbnailFilename(item)).exists()
+        val detailExists = File(itemUtils.getDetailFilename(item)).exists()
+        return thumbExists && detailExists
     }
 
     private suspend fun addToCache(item: MediaItem) {
-        val destination = itemUtils.getPath(item)
-        googlePhotos.saveMediaFile(item.usableUrl, destination)
-        Timber.d("Media downloaded to [$destination]")
+        googlePhotos.saveMediaFile(item.thumbnailUrl, itemUtils.getThumbnailFilename(item))
+        Timber.d("Thumbnail downloaded to [${itemUtils.getThumbnailFilename(item)}]")
+
+        googlePhotos.saveMediaFile(item.detailUrl, itemUtils.getDetailFilename(item))
+        Timber.d("Detail downloaded to [${itemUtils.getDetailFilename(item)}]")
     }
 
     private fun removeFromCache(item: MediaItem) {
-        val destination = itemUtils.getPath(item)
-        File(destination).delete()
-        Timber.d("Media deleted at [$destination]")
+        File(itemUtils.getThumbnailFilename(item)).delete()
+        File(itemUtils.getDetailFilename(item)).delete()
+        Timber.d("Media deleted")
     }
 
     fun clearCaches() {

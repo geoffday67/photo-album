@@ -10,9 +10,8 @@ sealed class MediaItem(
     abstract val creationTime: Instant
     abstract val camera: String
     abstract val mimeType: String
-
-    val usableUrl: String
-        get() = "${url}=w4096-h4096"
+    abstract val thumbnailUrl: String
+    abstract val detailUrl: String
 }
 
 data class PhotoItem(
@@ -22,7 +21,13 @@ data class PhotoItem(
     override val creationTime: Instant,
     override val camera: String,
     override val mimeType: String,
-) : MediaItem() {
+    ) : MediaItem() {
+    override val thumbnailUrl: String
+        get() = "${url}=w600-h600"
+
+    override val detailUrl: String
+        get() = "${url}=w4000-h4000"
+
     companion object {
         val EMPTY
             get() = PhotoItem(
@@ -43,8 +48,10 @@ data class VideoItem(
     override val creationTime: Instant,
     override val camera: String,
     override val mimeType: String,
-    var path: String,
 ) : MediaItem() {
-    val downloadUrl: String
+    override val thumbnailUrl: String
+        get() = "${url}=w600-h600"
+
+    override val detailUrl: String
         get() = "${url}=dv"
 }

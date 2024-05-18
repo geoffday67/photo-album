@@ -28,7 +28,6 @@ class RealmItem : RealmObject {
     var url: String = ""
     var creationTime: String = ""
     var camera: String = ""
-    var path: String = ""
     var mimeType: String = ""
 }
 
@@ -41,10 +40,6 @@ fun RealmItem.copyFromItem(source: MediaItem) {
     this.url = source.url
     this.creationTime = source.creationTime.toString()
     this.camera = source.camera
-    this.path = when (source) {
-        is PhotoItem -> ""
-        is VideoItem -> source.path
-    }
     this.mimeType = source.mimeType
 }
 
@@ -59,10 +54,6 @@ fun MediaItem.toRealmItem() =
         url = this@toRealmItem.url
         creationTime = this@toRealmItem.creationTime.toString()
         camera = this@toRealmItem.camera
-        path = when (this@toRealmItem) {
-            is PhotoItem -> ""
-            is VideoItem -> this@toRealmItem.path
-        }
         mimeType = this@toRealmItem.mimeType
     }
 
@@ -82,7 +73,6 @@ fun RealmItem.toMediaItem(): MediaItem? =
             url = this@toMediaItem.url,
             creationTime = Instant.parse(this@toMediaItem.creationTime),
             camera = this@toMediaItem.camera,
-            path = this@toMediaItem.path,
             mimeType = this@toMediaItem.mimeType,
         )
         else -> {

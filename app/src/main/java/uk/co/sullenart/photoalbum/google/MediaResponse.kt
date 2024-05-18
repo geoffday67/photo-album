@@ -72,7 +72,6 @@ fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
                 creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
                 camera = camera,
                 mimeType = this.mimeType.orEmpty(),
-                path = "",
             )
         }
         else -> return PhotoItem.EMPTY

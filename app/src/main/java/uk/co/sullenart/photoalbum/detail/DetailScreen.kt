@@ -27,20 +27,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.FileDataSource
-import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import coil3.annotation.ExperimentalCoilApi
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.size.Precision
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import org.koin.compose.koinInject
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
 import org.threeten.bp.format.FormatStyle
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
+import uk.co.sullenart.photoalbum.items.ItemUtils
 import uk.co.sullenart.photoalbum.items.MediaItem
 import uk.co.sullenart.photoalbum.items.PhotoItem
 import uk.co.sullenart.photoalbum.items.VideoItem
@@ -75,7 +72,10 @@ fun DetailContent(
                     }
                 }
                 is VideoItem -> {
-                    VideoItem(item) { infoVisible = !infoVisible }
+                    VideoDetail(
+                        video = item,
+                        onLongClick = { infoVisible = !infoVisible },
+                    )
                     if (infoVisible) {
                         VideoInfo(item)
                     }
@@ -96,6 +96,18 @@ private fun PhotoItem(
             .fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
+        val request = ImageRequest.Builder(LocalContext.current)
+            .data(photo)
+            .setParameter(
+                key = "type",
+                value = "detail",
+                memoryCacheKey = photo.id,
+            )
+            //.memoryCacheKey(item.id)
+            .listener { _, result ->
+                Timber.d("Fetch image from ${result.dataSource} for id ${photo.id}")
+            }
+            .build()
         AsyncImage(
             modifier = Modifier
                 .fillMaxSize()
@@ -105,7 +117,7 @@ private fun PhotoItem(
                     onClick = {},
                     onLongClick = onLongClick,
                 ),
-            model = photo,
+            model = request,
             contentDescription = null,
             contentScale = ContentScale.Fit,
         )
@@ -154,9 +166,10 @@ private fun PhotoInfo(
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-fun VideoItem(
+fun VideoDetail(
     video: VideoItem,
     onLongClick: () -> Unit,
+    itemUtils: ItemUtils = koinInject(),
 ) {
     var player: ExoPlayer? = remember { null }
 
@@ -173,13 +186,13 @@ fun VideoItem(
     ) {
         AndroidView(
             factory = {
-                val uri = Uri.fromFile(File(video.path))
+                val uri = Uri.fromFile(File(itemUtils.getDetailFilename(video)))
                 val item = androidx.media3.common.MediaItem.fromUri(uri)
                 player = ExoPlayer.Builder(it)
                     .build().apply {
-                    setMediaItem(item)
-                    playWhenReady = true
-                }
+                        setMediaItem(item)
+                        playWhenReady = true
+                    }
                 val view = PlayerView(it).apply {
                     this.player = player
                     controllerAutoShow = false

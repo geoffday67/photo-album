@@ -4,12 +4,10 @@ import android.app.Application
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import coil3.ImageLoader
-import coil3.PlatformContext
-import coil3.SingletonImageLoader
-import coil3.imageLoader
-import coil3.memory.MemoryCache
-import coil3.util.Logger
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.imageLoader
+import coil.memory.MemoryCache
 import com.jakewharton.threetenabp.AndroidThreeTen
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
@@ -39,7 +37,7 @@ import uk.co.sullenart.photoalbum.items.RealmItem
 import uk.co.sullenart.photoalbum.settings.SettingsViewmodel
 import java.util.concurrent.TimeUnit
 
-class MainApplication : Application(), SingletonImageLoader.Factory {
+class MainApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
@@ -99,25 +97,16 @@ class MainApplication : Application(), SingletonImageLoader.Factory {
             )
     }
 
-    private val coilLogger = object : Logger {
-        override var minLevel = Logger.Level.Verbose
-
-        override fun log(tag: String, level: Logger.Level, message: String?, throwable: Throwable?) {
-            Timber.i(message)
-        }
-    }
-
-    override fun newImageLoader(context: PlatformContext): ImageLoader {
+    override fun newImageLoader(): ImageLoader {
         return ImageLoader.Builder(this)
             .components {
                 add(ItemFetcher.Factory())
             }
             .memoryCache {
-                MemoryCache.Builder()
-                    .maxSizePercent(context, 0.25)
+                MemoryCache.Builder(this)
+                    .maxSizePercent(0.25)
                     .build()
             }
-            .logger(coilLogger)
             .build()
     }
 }
