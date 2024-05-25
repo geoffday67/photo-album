@@ -23,10 +23,10 @@ data class PhotoItem(
     override val mimeType: String,
     ) : MediaItem() {
     override val thumbnailUrl: String
-        get() = "${url}=w600-h600"
+        get() = "${url}=w400-h400"
 
     override val detailUrl: String
-        get() = "${url}=w4000-h4000"
+        get() = "${url}=w10000-h10000"
 
     companion object {
         val EMPTY

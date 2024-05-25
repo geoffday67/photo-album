@@ -7,21 +7,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.albums.Album.SortOrder
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 
 class ItemsViewmodel(
     itemsRepository: MediaItemsRepository,
-    albumsRepository: AlbumsRepository,
-    albumId: String,
+    private val albumsRepository: AlbumsRepository,
+    private val albumId: String,
 ) : ViewModel() {
     var isDetail by mutableStateOf(false)
     var currentIndex = 0
     var firstIndex: Int = 0
     var firstOffset = 0
-    val itemFlow = itemsRepository.getItemFlowForAlbum(albumId)
-    val album = albumsRepository.getAlbum(albumId) ?: Album.EMPTY
 
-    private val items = mutableListOf<MediaItem>()
+    var album by mutableStateOf(albumsRepository.getAlbum(albumId) ?: Album.EMPTY)
+    var items by mutableStateOf<List<MediaItem>>(emptyList())
 
     val itemCount: Int
         get() = items.size
@@ -29,8 +29,8 @@ class ItemsViewmodel(
     init {
         viewModelScope.launch {
             itemsRepository.getItemFlowForAlbum(albumId).collect {
-                items.clear()
-                items.addAll(it)
+                items = it
+                sortItems()
             }
         }
     }
@@ -48,4 +48,24 @@ class ItemsViewmodel(
 
     fun getItemFromIndex(index: Int): MediaItem =
         items[index]
+
+    fun swapSortOrder() {
+        val newSortOrder = when (album.sortOrder) {
+            SortOrder.NEWEST_FIRST -> SortOrder.OLDEST_FIRST
+            SortOrder.OLDEST_FIRST -> SortOrder.NEWEST_FIRST
+            else -> SortOrder.OLDEST_FIRST
+        }
+        viewModelScope.launch {
+            album = albumsRepository.setSortOrder(album, newSortOrder)
+            sortItems()
+        }
+    }
+
+    private fun sortItems() {
+        items = when (album.sortOrder) {
+            SortOrder.NEWEST_FIRST -> items.sortedByDescending { it.creationTime }
+            SortOrder.OLDEST_FIRST -> items.sortedBy { it.creationTime }
+            else -> items
+        }
+    }
 }

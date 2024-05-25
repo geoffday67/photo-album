@@ -13,10 +13,12 @@ import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.items.MediaItemsRepository
 
 class AlbumsViewmodel(
-    albumsRepository: AlbumsRepository,
+    private val albumsRepository: AlbumsRepository,
     private val navController: NavController,
 ) : ViewModel() {
     val albumFlow = albumsRepository.albumFlow
+    val albums = albumsRepository.getAlbums()
+
     var settingsVisible by mutableStateOf(false)
 
     fun onAlbumClicked(album: Album) {

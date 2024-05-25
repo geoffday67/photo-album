@@ -50,7 +50,8 @@ fun AlbumsScreen(
                 .padding(dimensionResource(R.dimen.paddingM))
         ) {
             Content(
-                albums = viewModel.albumFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+                //albums = viewModel.albumFlow.collectAsStateWithLifecycle(emptyList()).value,
+                albums = viewModel.albums,
                 onAlbumClicked = viewModel::onAlbumClicked,
             )
             if (viewModel.settingsVisible) {

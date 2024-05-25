@@ -7,7 +7,12 @@ data class Album(
     val id: String,
     val title: String,
     val itemCount: Int,
+    val sortOrder: SortOrder,
 ) {
+    enum class SortOrder {
+        UNKNOWN, OLDEST_FIRST, NEWEST_FIRST,
+    }
+
     companion object {
         val EMPTY
             get() =
@@ -15,6 +20,7 @@ data class Album(
                     id = "",
                     title = "",
                     itemCount = 0,
+                    sortOrder = SortOrder.UNKNOWN,
                 )
     }
 }

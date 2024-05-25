@@ -2,6 +2,7 @@ package uk.co.sullenart.photoalbum.google
 
 import kotlinx.serialization.Serializable
 import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.albums.Album.SortOrder
 
 @Serializable
 data class SharedAlbumsResponse(
@@ -23,5 +24,6 @@ fun SharedAlbumsResponse.AlbumResponse.toAlbum() =
             this.mediaItemsCount?.toInt() ?: 0
         } catch (ignore: Exception) {
             0
-        }
+        },
+        sortOrder = SortOrder.UNKNOWN
     )

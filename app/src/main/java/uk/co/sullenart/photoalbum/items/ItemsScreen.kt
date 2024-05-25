@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -36,6 +37,7 @@ import org.koin.core.parameter.parametersOf
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.albums.Album
+import uk.co.sullenart.photoalbum.albums.Album.SortOrder
 import uk.co.sullenart.photoalbum.detail.DetailContent
 
 @Composable
@@ -59,10 +61,12 @@ fun ItemsScreen(
             ItemsTopBar(
                 album = viewModel.album,
                 onBack = { navController.popBackStack() },
+                sortOrder = viewModel.album.sortOrder,
+                sortOrderClicked = viewModel::swapSortOrder,
             )
             ItemsContent(
                 state = rememberLazyGridState(viewModel.firstIndex, viewModel.firstOffset),
-                items = viewModel.itemFlow.collectAsStateWithLifecycle(initialValue = emptyList()).value,
+                items = viewModel.items,
                 onItemClicked = viewModel::onItemClicked,
             )
         }
@@ -74,6 +78,8 @@ fun ItemsScreen(
 private fun ItemsTopBar(
     album: Album,
     onBack: () -> Unit,
+    sortOrder: SortOrder,
+    sortOrderClicked: () -> Unit,
 ) {
     TopAppBar(
         navigationIcon = {
@@ -84,10 +90,29 @@ private fun ItemsTopBar(
             }
 
         },
-        title = { Text("${album.title} (${album.itemCount})") },
+        title = {
+            Text("${album.title} (${album.itemCount})")
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
         ),
+        actions = {
+            Text(
+                text = when (sortOrder) {
+                    SortOrder.NEWEST_FIRST -> stringResource(R.string.newest_first)
+                    SortOrder.OLDEST_FIRST -> stringResource(R.string.oldest_first)
+                    else -> stringResource(R.string.newest_first)
+                },
+            )
+            IconButton(
+                onClick = sortOrderClicked,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SwapVert,
+                    contentDescription = null,
+                )
+            }
+        }
     )
 }
 

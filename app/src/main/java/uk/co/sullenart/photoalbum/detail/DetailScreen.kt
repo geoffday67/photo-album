@@ -1,15 +1,21 @@
 package uk.co.sullenart.photoalbum.detail
 
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Card
@@ -17,15 +23,23 @@ import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -34,7 +48,10 @@ import coil.compose.AsyncImage
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
+import coil.request.CachePolicy
 import coil.request.ImageRequest
+import coil.size.Precision
+import coil.size.Size
 import org.koin.compose.koinInject
 import org.threeten.bp.ZoneId
 import org.threeten.bp.format.DateTimeFormatter
@@ -46,6 +63,7 @@ import uk.co.sullenart.photoalbum.items.MediaItem
 import uk.co.sullenart.photoalbum.items.PhotoItem
 import uk.co.sullenart.photoalbum.items.VideoItem
 import java.io.File
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -86,41 +104,58 @@ fun DetailContent(
 @Composable
 private fun PhotoItem(
     photo: PhotoItem,
+    itemUtils: ItemUtils = koinInject()
 ) {
-    var infoVisible by remember { mutableStateOf(false) }
-
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center,
+            .fillMaxSize()
     ) {
-        // Get the context separately so we can "remember" the image request.
-        val context = LocalContext.current
-        val request = remember {
-            ImageRequest.Builder(context)
-                .data(photo)
-                .setParameter(
-                    key = "type",
-                    value = "detail",
-                )
-                .memoryCacheKey(photo.id)
-                .listener { _, result ->
-                    Timber.d("Fetch image from ${result.dataSource} for id ${photo.id}")
-                }
-                .build()
+        val maxWidthPx = with(LocalDensity.current) { maxWidth.toPx() }.roundToInt()
+        val maxHeightPx = with(LocalDensity.current) { maxHeight.toPx() }.roundToInt()
+
+        var infoVisible by remember { mutableStateOf(false) }
+
+        var offset by remember { mutableStateOf(IntOffset.Zero) }
+        val image = remember { BitmapFactory.decodeFile(itemUtils.getDetailFilename(photo)) }
+        val minScale = remember {
+            var result: Float = maxWidthPx.toFloat() / image.width.toFloat()
+            if ((result * image.height.toFloat()).roundToInt() > maxHeightPx) {
+                result = maxHeightPx.toFloat() / image.height.toFloat()
+            }
+            Timber.d("Minimum scale = $result")
+            result
         }
-        AsyncImage(
+        var scale by remember { mutableFloatStateOf(minScale) }
+        val state = rememberTransformableState { zoomChange, panChange, _ ->
+            scale = (scale * zoomChange).coerceAtLeast(minScale)
+            offset = IntOffset(
+                (offset.x - (panChange.x / scale).roundToInt()).coerceIn(0, image.width),
+                (offset.y - (panChange.y / scale).roundToInt()).coerceIn(0, image.height),
+            )
+        }
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .combinedClickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = {},
-                    onLongClick = { infoVisible = !infoVisible },
-                ),
-            model = request,
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
+                .transformable(state)
+                .drawWithContent {
+                    val srcOffset = IntOffset(offset.x, offset.y)
+                    val srcSize = IntSize((size.width / scale).roundToInt(), (size.height / scale).roundToInt())
+
+                    val dstOffset = IntOffset(
+                        ((size.width - image.width * scale) / 2).roundToInt().coerceAtLeast(0),
+                        ((size.height - image.height * scale) / 2).roundToInt().coerceAtLeast(0),
+                    )
+                    val dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt())
+
+                    drawImage(
+                        image = image.asImageBitmap(),
+                        srcOffset = srcOffset,
+                        srcSize = srcSize,
+                        dstSize = dstSize,
+                        dstOffset = dstOffset,
+                    )
+                },
         )
         if (infoVisible) {
             PhotoInfo(photo)
