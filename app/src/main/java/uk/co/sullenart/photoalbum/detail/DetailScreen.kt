@@ -137,14 +137,24 @@ private fun PhotoItem(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .combinedClickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                    onLongClick = { infoVisible = !infoVisible },
+                )
                 .transformable(state)
                 .drawWithContent {
                     val srcOffset = IntOffset(offset.x, offset.y)
                     val srcSize = IntSize((size.width / scale).roundToInt(), (size.height / scale).roundToInt())
 
                     val dstOffset = IntOffset(
-                        ((size.width - image.width * scale) / 2).roundToInt().coerceAtLeast(0),
-                        ((size.height - image.height * scale) / 2).roundToInt().coerceAtLeast(0),
+                        ((size.width - image.width * scale) / 2)
+                            .roundToInt()
+                            .coerceAtLeast(0),
+                        ((size.height - image.height * scale) / 2)
+                            .roundToInt()
+                            .coerceAtLeast(0),
                     )
                     val dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt())
 
@@ -156,7 +166,8 @@ private fun PhotoItem(
                         dstOffset = dstOffset,
                     )
                 },
-        )
+
+            )
         if (infoVisible) {
             PhotoInfo(photo)
         }
