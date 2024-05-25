@@ -10,7 +10,7 @@ data class Album(
     val sortOrder: SortOrder,
 ) {
     enum class SortOrder {
-        UNKNOWN, OLDEST_FIRST, NEWEST_FIRST,
+        OLDEST_FIRST, NEWEST_FIRST,
     }
 
     companion object {
@@ -20,7 +20,7 @@ data class Album(
                     id = "",
                     title = "",
                     itemCount = 0,
-                    sortOrder = SortOrder.UNKNOWN,
+                    sortOrder = SortOrder.NEWEST_FIRST,
                 )
     }
 }

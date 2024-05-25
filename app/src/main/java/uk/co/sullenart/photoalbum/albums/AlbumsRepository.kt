@@ -48,12 +48,9 @@ class AlbumsRepository(
     }
 
     suspend fun setSortOrder(album: Album, sortOrder: Album.SortOrder): Album {
-        // Create new album object with specified sort order and update Realm to match.
         val newAlbum = album.copy(sortOrder = sortOrder)
         realm.write {
-            val existing = query<RealmAlbum>("id == $0", album.id).first().find()
-            existing?.copyFromAlbum(newAlbum)
-            Timber.d("Existing sort order updated ${existing?.id}, ${existing?.sortOrder}")
+            query<RealmAlbum>("id == $0", album.id).first().find()?.copyFromAlbum(newAlbum)
         }
         return newAlbum
     }

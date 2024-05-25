@@ -12,12 +12,12 @@ class RealmAlbum : RealmObject {
             try {
                 SortOrder.valueOf(sortOrderName)
             } catch (e: IllegalArgumentException) {
-                SortOrder.UNKNOWN
+                SortOrder.NEWEST_FIRST
             }
         set(value) {
             sortOrderName = value.name
         }
-    private var sortOrderName: String = SortOrder.UNKNOWN.name
+    private var sortOrderName: String = SortOrder.NEWEST_FIRST.name
 }
 
 fun RealmAlbum.copyFromAlbum(source: Album) {

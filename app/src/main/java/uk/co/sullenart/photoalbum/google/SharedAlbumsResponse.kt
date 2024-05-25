@@ -25,5 +25,5 @@ fun SharedAlbumsResponse.AlbumResponse.toAlbum() =
         } catch (ignore: Exception) {
             0
         },
-        sortOrder = SortOrder.UNKNOWN
+        sortOrder = SortOrder.NEWEST_FIRST,
     )
