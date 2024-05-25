@@ -3,7 +3,10 @@ package uk.co.sullenart.photoalbum.detail
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,8 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.IntOffset
@@ -91,68 +99,45 @@ private fun PhotoItem(
     photo: PhotoItem,
     itemUtils: ItemUtils = koinInject()
 ) {
-    BoxWithConstraints(
+    Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        val maxWidthPx = with(LocalDensity.current) { maxWidth.toPx() }.roundToInt()
-        val maxHeightPx = with(LocalDensity.current) { maxHeight.toPx() }.roundToInt()
-
+        val image = remember { BitmapFactory.decodeFile(itemUtils.getDetailFilename(photo)).asImageBitmap() }
         var infoVisible by remember { mutableStateOf(false) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+        var scale by remember { mutableFloatStateOf(1f) }
 
-        var offset by remember { mutableStateOf(IntOffset.Zero) }
-        val image = remember { BitmapFactory.decodeFile(itemUtils.getDetailFilename(photo)) }
-        val minScale = remember {
-            var result: Float = maxWidthPx.toFloat() / image.width.toFloat()
-            if ((result * image.height.toFloat()).roundToInt() > maxHeightPx) {
-                result = maxHeightPx.toFloat() / image.height.toFloat()
-            }
-            Timber.d("Minimum scale = $result")
-            result
-        }
-        var scale by remember { mutableFloatStateOf(minScale) }
-        val state = rememberTransformableState { zoomChange, panChange, _ ->
-            scale = (scale * zoomChange).coerceAtLeast(minScale)
-            offset = IntOffset(
-                (offset.x - (panChange.x / scale).roundToInt()).coerceIn(0, image.width),
-                (offset.y - (panChange.y / scale).roundToInt()).coerceIn(0, image.height),
-            )
-        }
-
-        Box(
+        Image(
             modifier = Modifier
                 .fillMaxSize()
-                .combinedClickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = {},
-                    onLongClick = { infoVisible = !infoVisible },
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offset.x,
+                    translationY = offset.y,
                 )
-                .transformable(state)
-                .drawWithContent {
-                    val srcOffset = IntOffset(offset.x, offset.y)
-                    val srcSize = IntSize((size.width / scale).roundToInt(), (size.height / scale).roundToInt())
-
-                    val dstOffset = IntOffset(
-                        ((size.width - image.width * scale) / 2)
-                            .roundToInt()
-                            .coerceAtLeast(0),
-                        ((size.height - image.height * scale) / 2)
-                            .roundToInt()
-                            .coerceAtLeast(0),
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onLongPress = { infoVisible = !infoVisible },
+                        onDoubleTap = {
+                            scale = 1f
+                            offset = Offset.Zero
+                        }
                     )
-                    val dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt())
-
-                    drawImage(
-                        image = image.asImageBitmap(),
-                        srcOffset = srcOffset,
-                        srcSize = srcSize,
-                        dstSize = dstSize,
-                        dstOffset = dstOffset,
-                    )
+                }
+                .pointerInput(Unit) {
+                    detectTransformGestures { centroid, pan, zoom, rotation ->
+                        scale = (scale * zoom).coerceIn(1f, 3f)
+                        offset = Offset(
+                            (offset.x + (pan.x * scale)),
+                            (offset.y + (pan.y * scale)),
+                        )
+                    }
                 },
-
-            )
+            bitmap = image,
+            contentDescription = null,
+        )
         if (infoVisible) {
             PhotoInfo(photo)
         }
