@@ -6,4 +6,6 @@
     <string name="refresh">Refresh now</string>
     <string name="newest_first">Newest first</string>
     <string name="oldest_first">Oldest first</string>
+    <string name="created">Created:</string>
+    <string name="camera">Camera:</string>
 </resources>

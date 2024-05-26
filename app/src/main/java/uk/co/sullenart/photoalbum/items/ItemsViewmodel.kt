@@ -29,7 +29,7 @@ class ItemsViewmodel(
     init {
         viewModelScope.launch {
             itemsRepository.getItemFlowForAlbum(albumId).collect {
-                items = it
+                items = it.filterIsInstance<PhotoItem>() // TESTING
                 sortItems()
             }
         }

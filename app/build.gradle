@@ -23,6 +23,12 @@ android {
     }
 
     signingConfigs {
+        release {
+            keyAlias 'key0'
+            keyPassword 'photoalbum'
+            storeFile file("../keystore")
+            storePassword 'photoalbum'
+        }
         debug {
             keyAlias 'key0'
             keyPassword 'photoalbum'
@@ -39,6 +45,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -82,6 +89,7 @@ dependencies {
     implementation 'io.realm.kotlin:library-base:1.14.1'
     implementation 'androidx.work:work-runtime-ktx:2.10.0-alpha02'
     implementation 'com.jakewharton.threetenabp:threetenabp:1.4.7'
+    implementation 'com.mxalbert.zoomable:zoomable:1.6.1'
 
     implementation 'androidx.media3:media3-exoplayer:1.3.1'
     //implementation 'androidx.media3:media3-session:1.3.1'

@@ -7,6 +7,7 @@ import coil.fetch.FetchResult
 import coil.fetch.Fetcher
 import coil.fetch.SourceResult
 import coil.request.Options
+import kotlinx.coroutines.delay
 import okio.Path.Companion.toPath
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -26,7 +27,6 @@ class ItemFetcher(
 
     class Factory : Fetcher.Factory<MediaItem>, KoinComponent {
         override fun create(data: MediaItem, options: Options, imageLoader: ImageLoader): Fetcher? {
-            Timber.d("Creating factory for id ${data.id}, type ${options.parameters.value<String>("type")}")
             val type = when (options.parameters.value<String>("type")) {
                 "thumbnail" -> Type.THUMBNAIL
                 "detail" -> Type.DETAIL
@@ -41,7 +41,7 @@ class ItemFetcher(
             Type.THUMBNAIL -> itemUtils.getThumbnailFilename(item)
             Type.DETAIL -> itemUtils.getDetailFilename(item)
         }
-        Timber.d("Fetching item from $destination")
+        Timber.i("Fetching item from $destination")
 
         return SourceResult(
             source = ImageSource(destination.toPath()),
