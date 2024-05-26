@@ -17,10 +17,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults.cardColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +49,11 @@ import uk.co.sullenart.photoalbum.items.PhotoItem
 import uk.co.sullenart.photoalbum.items.VideoItem
 import java.io.File
 
+private interface VisibilityListener {
+    fun onVisible()
+    fun onHidden()
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DetailContent(
@@ -58,6 +65,17 @@ fun DetailContent(
         initialPage = initialPage,
         pageCount = { pageCount },
     )
+
+    var previouslyVisible: Int? = remember { null }
+    val visibilityListeners = remember { mutableMapOf<Int, VisibilityListener>() }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect {
+            visibilityListeners[it]?.onVisible()
+            visibilityListeners[previouslyVisible]?.onHidden()
+            previouslyVisible = it
+        }
+    }
 
     var infoVisible by remember { mutableStateOf(false) }
 
@@ -82,8 +100,12 @@ fun DetailContent(
                 is VideoItem -> {
                     VideoDetail(
                         video = item,
-                        onLongClick = { },
+                        register = { visibilityListeners[index] = it },
+                        toggleInfo = { infoVisible = !infoVisible },
                     )
+                    if (infoVisible) {
+                        VideoInfo(item)
+                    }
                 }
             }
         }
@@ -164,43 +186,62 @@ private fun PhotoInfo(
 @OptIn(ExperimentalFoundationApi::class)
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-fun VideoDetail(
+private fun VideoDetail(
     video: VideoItem,
-    onLongClick: () -> Unit,
+    register: (VisibilityListener) -> Unit,
+    toggleInfo: () -> Unit,
     itemUtils: ItemUtils = koinInject(),
 ) {
-    var player: ExoPlayer? = remember { null }
-
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .combinedClickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = {},
-                onLongClick = { Timber.d("Video long click") },
-            ),
+            .fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
+        val context = LocalContext.current
+        val player = remember {
+            Timber.i("Preparing video player")
+            val uri = Uri.fromFile(File(itemUtils.getDetailFilename(video)))
+            val item = androidx.media3.common.MediaItem.fromUri(uri)
+            ExoPlayer.Builder(context)
+                .build().apply {
+                    setMediaItem(item)
+                    playWhenReady = false
+                    prepare()
+                }
+        }
+
         AndroidView(
             factory = {
-                val uri = Uri.fromFile(File(itemUtils.getDetailFilename(video)))
-                val item = androidx.media3.common.MediaItem.fromUri(uri)
-                player = ExoPlayer.Builder(it)
-                    .build().apply {
-                        setMediaItem(item)
-                        playWhenReady = true
-                    }
                 val view = PlayerView(it).apply {
                     this.player = player
                     controllerAutoShow = false
                     hideController()
+                    videoSurfaceView?.setOnLongClickListener {
+                        toggleInfo()
+                        true
+                    }
                 }
-                player?.prepare()
+
+                register(object : VisibilityListener {
+                    override fun onVisible() {
+                        with (player) {
+                            seekTo(0)
+                            play()
+                        }
+                    }
+
+                    override fun onHidden() {
+                        with (player) {
+                            pause()
+                        }
+                    }
+                })
+
                 view
             },
             onRelease = {
-                player?.release()
+                Timber.i("Releasing video player")
+                player.release()
             },
         )
     }
