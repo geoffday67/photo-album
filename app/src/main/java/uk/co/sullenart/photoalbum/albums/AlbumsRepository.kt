@@ -3,14 +3,8 @@ package uk.co.sullenart.photoalbum.albums
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import timber.log.Timber
-import uk.co.sullenart.photoalbum.items.RealmItem
-import uk.co.sullenart.photoalbum.items.copyFromItem
-import uk.co.sullenart.photoalbum.items.toMediaItem
-import uk.co.sullenart.photoalbum.items.toRealmItem
 
 class AlbumsRepository(
     private val realm: Realm,
