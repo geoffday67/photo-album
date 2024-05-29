@@ -6,12 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.albums.Album.SortOrder
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 
 class ItemsViewmodel(
-    itemsRepository: MediaItemsRepository,
+    private val itemsRepository: MediaItemsRepository,
     private val albumsRepository: AlbumsRepository,
     private val albumId: String,
 ) : ViewModel() {
@@ -29,8 +30,8 @@ class ItemsViewmodel(
     init {
         viewModelScope.launch {
             itemsRepository.getItemFlowForAlbum(albumId).collect {
-                items = it
-                sortItems()
+                Timber.d("${it.size} new media items from flow")
+                items = it.sortItems()
             }
         }
     }
@@ -46,6 +47,10 @@ class ItemsViewmodel(
         isDetail = false
     }
 
+    fun onCurrentPage(current: Int) {
+        currentIndex = current
+    }
+
     fun getItemFromIndex(index: Int): MediaItem =
         items[index]
 
@@ -53,19 +58,30 @@ class ItemsViewmodel(
         val newSortOrder = when (album.sortOrder) {
             SortOrder.NEWEST_FIRST -> SortOrder.OLDEST_FIRST
             SortOrder.OLDEST_FIRST -> SortOrder.NEWEST_FIRST
-            else -> SortOrder.OLDEST_FIRST
         }
         viewModelScope.launch {
             album = albumsRepository.setSortOrder(album, newSortOrder)
-            sortItems()
+            items = items.sortItems()
         }
     }
 
-    private fun sortItems() {
-        items = when (album.sortOrder) {
-            SortOrder.NEWEST_FIRST -> items.sortedByDescending { it.creationTime }
-            SortOrder.OLDEST_FIRST -> items.sortedBy { it.creationTime }
-            else -> items
+    private fun List<MediaItem>.sortItems(): List<MediaItem> =
+        when (album.sortOrder) {
+            SortOrder.NEWEST_FIRST -> sortedByDescending { it.creationTime }
+            SortOrder.OLDEST_FIRST -> sortedBy { it.creationTime }
+        }
+
+    fun setItemRotation(
+        item: MediaItem,
+        newRotation: Rotation,
+    ) {
+        if (item !is PhotoItem) {
+            Timber.w("Only photos can be rotated")
+            return
+        }
+
+        viewModelScope.launch {
+            itemsRepository.setRotation(item, newRotation)
         }
     }
 }

@@ -51,14 +51,11 @@ fun SettingsScreen(
     Dialog(
         onDismissRequest = onDismiss,
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = dimensionResource(R.dimen.paddingM)),
-        ) {
+        Card {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(top = dimensionResource(R.dimen.paddingM), start = dimensionResource(R.dimen.paddingM), end = dimensionResource(R.dimen.paddingM))
                     .padding(dimensionResource(R.dimen.paddingM))
             ) {
                 Greeting(

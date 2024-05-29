@@ -3,6 +3,7 @@ package uk.co.sullenart.photoalbum.items
 import io.realm.kotlin.types.RealmObject
 import org.threeten.bp.Instant
 import timber.log.Timber
+import kotlin.reflect.KProperty
 
 internal enum class MediaType(
 ) {
@@ -10,7 +11,6 @@ internal enum class MediaType(
     PHOTO,
     VIDEO,
 }
-
 class RealmItem : RealmObject {
     internal var type: MediaType
         get() =
@@ -29,18 +29,34 @@ class RealmItem : RealmObject {
     var creationTime: String = ""
     var camera: String = ""
     var mimeType: String = ""
+
+    private var rotationName: String = Rotation.NONE.name
+    var rotation: Rotation
+        get() =
+            try {
+                Rotation.valueOf(rotationName)
+            } catch (e: IllegalArgumentException) {
+                Rotation.NONE
+            }
+        set(value) {
+            rotationName = value.name
+        }
 }
 
-fun RealmItem.copyFromItem(source: MediaItem) {
+fun RealmItem.copyFromItem(
+    source: MediaItem,
+    except: Set<KProperty<*>> = emptySet()
+) {
     type = when (source) {
         is PhotoItem -> MediaType.PHOTO
         is VideoItem -> MediaType.VIDEO
     }
-    this.albumId = source.albumId
-    this.url = source.url
-    this.creationTime = source.creationTime.toString()
-    this.camera = source.camera
-    this.mimeType = source.mimeType
+    if (this::albumId !in except) this.albumId = source.albumId
+    if (this::url !in except) this.url = source.url
+    if (this::creationTime !in except) this.creationTime = source.creationTime.toString()
+    if (this::camera !in except) this.camera = source.camera
+    if (this::mimeType !in except) this.mimeType = source.mimeType
+    if (this::rotation !in except) this.rotation = source.rotation
 }
 
 fun MediaItem.toRealmItem() =
@@ -55,6 +71,7 @@ fun MediaItem.toRealmItem() =
         creationTime = this@toRealmItem.creationTime.toString()
         camera = this@toRealmItem.camera
         mimeType = this@toRealmItem.mimeType
+        rotation = this@toRealmItem.rotation
     }
 
 fun RealmItem.toMediaItem(): MediaItem? =
@@ -66,6 +83,7 @@ fun RealmItem.toMediaItem(): MediaItem? =
             creationTime = Instant.parse(this@toMediaItem.creationTime),
             camera = this@toMediaItem.camera,
             mimeType = this@toMediaItem.mimeType,
+            rotation = this@toMediaItem.rotation
         )
         MediaType.VIDEO -> VideoItem(
             id = this@toMediaItem.id,
@@ -74,6 +92,7 @@ fun RealmItem.toMediaItem(): MediaItem? =
             creationTime = Instant.parse(this@toMediaItem.creationTime),
             camera = this@toMediaItem.camera,
             mimeType = this@toMediaItem.mimeType,
+            rotation = this@toMediaItem.rotation
         )
         else -> {
             Timber.e("Unknown media type: ${this@toMediaItem.type}")

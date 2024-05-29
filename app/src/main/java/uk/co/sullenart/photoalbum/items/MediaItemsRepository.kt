@@ -2,7 +2,6 @@ package uk.co.sullenart.photoalbum.items
 
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
-import io.realm.kotlin.query.Sort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -29,6 +28,15 @@ class MediaItemsRepository(
         }
     }
 
+    suspend fun setRotation(photo: PhotoItem, rotation: Rotation): PhotoItem {
+        val newItem = photo.copy(rotation = rotation)
+        realm.write {
+            query<RealmItem>("id == $0", photo.id).first().find()?.copyFromItem(newItem)
+        }
+        Timber.d("Rotation set to $rotation for ${photo.id}")
+        return newItem
+    }
+
     suspend fun sync(
         albumId: String,
         items: List<MediaItem>,
@@ -40,20 +48,21 @@ class MediaItemsRepository(
                 val result = query<RealmItem>("id == $0 AND albumId == $1", item.id, albumId).first().find()
                 if (result == null) {
                     // No, create a new record.
-                    Timber.d("Photo not found, new record created [${item.id}]")
+                    Timber.d("Media item not found, new record created [${item.id}]")
                     runBlocking {
                         addToCache(item)
                     }
                     copyToRealm(item.toRealmItem())
                 } else {
                     // Yes, update its properties, Realm will update the persisted record once outside the "write" scope.
-                    Timber.d("Photo record updated [${item.id}]")
+                    // The "item" has come from the remote API - retain properties like rotation that are
+                    Timber.d("Media record updated [${item.id}]")
                     if (!isInCache(item)) {
                         runBlocking {
                             addToCache(item)
                         }
                     }
-                    result.copyFromItem(item)
+                    result.copyFromItem(item, except = setOf(result::rotation))
                 }
                 progress?.invoke()
             }

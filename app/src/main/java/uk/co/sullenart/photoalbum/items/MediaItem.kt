@@ -2,6 +2,10 @@ package uk.co.sullenart.photoalbum.items
 
 import org.threeten.bp.Instant
 
+enum class Rotation {
+    NONE, LEFT, RIGHT, INVERT,
+}
+
 sealed class MediaItem(
 ) {
     abstract val id: String
@@ -12,6 +16,7 @@ sealed class MediaItem(
     abstract val mimeType: String
     abstract val thumbnailUrl: String
     abstract val detailUrl: String
+    abstract val rotation: Rotation
 }
 
 data class PhotoItem(
@@ -21,7 +26,8 @@ data class PhotoItem(
     override val creationTime: Instant,
     override val camera: String,
     override val mimeType: String,
-    ) : MediaItem() {
+    override val rotation: Rotation
+) : MediaItem() {
     override val thumbnailUrl: String
         get() = "${url}=w400-h400"
 
@@ -37,6 +43,7 @@ data class PhotoItem(
                 creationTime = Instant.MIN,
                 camera = "",
                 mimeType = "",
+                rotation = Rotation.NONE,
             )
     }
 }
@@ -48,9 +55,10 @@ data class VideoItem(
     override val creationTime: Instant,
     override val camera: String,
     override val mimeType: String,
+    override val rotation: Rotation,
 ) : MediaItem() {
     override val thumbnailUrl: String
-        get() = "${url}=w600-h600"
+        get() = "${url}=w400-h400"
 
     override val detailUrl: String
         get() = "${url}=dv"

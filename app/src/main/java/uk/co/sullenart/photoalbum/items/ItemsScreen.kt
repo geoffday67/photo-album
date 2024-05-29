@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import coil.size.Size
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import timber.log.Timber
@@ -40,6 +39,7 @@ import uk.co.sullenart.photoalbum.R
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.albums.Album.SortOrder
 import uk.co.sullenart.photoalbum.detail.DetailContent
+import uk.co.sullenart.photoalbum.detail.RotationTransformation
 
 @Composable
 fun ItemsScreen(
@@ -53,6 +53,9 @@ fun ItemsScreen(
             pageCount = viewModel.itemCount,
             initialPage = viewModel.currentIndex,
             getItemFromIndex = viewModel::getItemFromIndex,
+            onRotationSelected = viewModel::setItemRotation,
+            onCurrentPage = viewModel::onCurrentPage,
+            getInfoIndex = { viewModel.currentIndex }
         )
     } else {
         Column(
@@ -124,8 +127,6 @@ private fun ItemsContent(
     items: List<MediaItem>,
     onItemClicked: (MediaItem, Int, Int) -> Unit,
 ) {
-    // TODO Check for recomposition
-
     Card(
         modifier = Modifier
             .fillMaxSize()
@@ -163,7 +164,8 @@ private fun MediaItem(
                 key = "type",
                 value = "thumbnail",
             )
-            .memoryCacheKey(item.id)
+            .transformations(RotationTransformation(item))
+            .memoryCacheKey("${item.id}-thumbnail-${item.rotation.name}")
             .listener { _, result ->
                 Timber.d("Fetch image from ${result.dataSource} for id ${item.id}")
             }

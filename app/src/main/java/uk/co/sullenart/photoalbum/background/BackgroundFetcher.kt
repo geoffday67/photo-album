@@ -32,18 +32,14 @@ class BackgroundFetcher(
         val totalItems = albums.fold(0) { acc, element -> acc + element.itemCount }
         var itemsProcessed = 0
 
-        // TODO Decide which albums to get the photos for, currently it fetches photos if the number of photos in the album has changed.
-
         albums.forEach { album ->
-            if (album.itemCount == itemsRepository.getCountForAlbum(album.id)) {
+            /*if (album.itemCount == itemsRepository.getCountForAlbum(album.id)) {
                 Timber.d("Skipping album ${album.title}, item count the same (${album.itemCount})")
                 return@forEach
-            }
+            }*/
+            // Get everything each time, since we sync there won't be unnecessary downloading.
 
-            val mediaForAlbum = googlePhotos.getMediaForAlbum(album) ?: run {
-                Timber.e("Failed to get items from Google for album ${album.title}")
-                return@forEach
-            }
+            val mediaForAlbum = googlePhotos.getMediaForAlbum(album)
             itemsRepository.sync(album.id, mediaForAlbum) {
                 progress?.invoke(totalItems, ++itemsProcessed)
             }

@@ -5,6 +5,7 @@ import org.threeten.bp.Instant
 import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.items.MediaItem
 import uk.co.sullenart.photoalbum.items.PhotoItem
+import uk.co.sullenart.photoalbum.items.Rotation
 import uk.co.sullenart.photoalbum.items.VideoItem
 
 @Serializable
@@ -56,6 +57,7 @@ fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
                 creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
                 camera = camera,
                 mimeType = this.mimeType.orEmpty(),
+                rotation = Rotation.NONE,
             )
         }
         this.mediaMetadata?.video != null -> {
@@ -72,6 +74,7 @@ fun MediaResponse.MediaItemResponse.toMediaItem(album: Album): MediaItem {
                 creationTime = Instant.parse(this.mediaMetadata.creationTime.orEmpty()),
                 camera = camera,
                 mimeType = this.mimeType.orEmpty(),
+                rotation = Rotation.NONE,
             )
         }
         else -> return PhotoItem.EMPTY
