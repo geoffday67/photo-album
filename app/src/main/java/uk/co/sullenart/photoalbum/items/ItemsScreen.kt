@@ -165,9 +165,8 @@ private fun MediaItem(
                 value = "thumbnail",
             )
             .transformations(RotationTransformation(item))
-            .memoryCacheKey("${item.id}-thumbnail-${item.rotation.name}")
             .listener { _, result ->
-                Timber.d("Fetch image from ${result.dataSource} for id ${item.id}")
+                Timber.i("Image ${result.drawable.intrinsicWidth} x ${result.drawable.intrinsicHeight} loaded from ${result.dataSource} for key ${result.memoryCacheKey?.key}")
             }
             .build()
     }

@@ -115,12 +115,11 @@ private fun ZoomablePhoto(
         model = ImageRequest.Builder(context)
             .data(photo)
             .size(Size.ORIGINAL)
-            .memoryCacheKey("${photo.id}-detail-${photo.rotation.name}")
             .setParameter("type", "detail")
             .transformations(RotationTransformation(photo))
             .build(),
         onSuccess = {
-            Timber.i("Image loaded from ${it.result.dataSource} for id ${photo.id}")
+            Timber.i("Image ${it.result.drawable.intrinsicWidth} x ${it.result.drawable.intrinsicHeight} loaded from ${it.result.dataSource} for key ${it.result.memoryCacheKey?.key}")
         },
     )
     Zoomable(

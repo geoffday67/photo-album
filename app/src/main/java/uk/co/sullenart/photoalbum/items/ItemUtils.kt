@@ -8,6 +8,7 @@ class ItemUtils(
     context: Context,
 ) {
     private val root: String by lazy { "${context.filesDir}${File.separator}media" }
+    //private val root: String by lazy { "/storage/sdcard0/Android/data/uk.co.sullenart.photoalbum/files/media" }
 
     init {
         File(root).mkdir()

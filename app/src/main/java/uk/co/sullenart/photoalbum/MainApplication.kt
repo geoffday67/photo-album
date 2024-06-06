@@ -29,6 +29,7 @@ import uk.co.sullenart.photoalbum.auth.UserRepository
 import uk.co.sullenart.photoalbum.background.BackgroundFetcher
 import uk.co.sullenart.photoalbum.background.RefreshWorker
 import uk.co.sullenart.photoalbum.coil.ItemFetcher
+import uk.co.sullenart.photoalbum.coil.ItemKeyer
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import uk.co.sullenart.photoalbum.items.ItemUtils
 import uk.co.sullenart.photoalbum.items.ItemsViewmodel
@@ -101,10 +102,11 @@ class MainApplication : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this)
             .components {
                 add(ItemFetcher.Factory())
+                add(ItemKeyer())
             }
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
+                    .maxSizePercent(1.0)
                     .build()
             }
             .build()

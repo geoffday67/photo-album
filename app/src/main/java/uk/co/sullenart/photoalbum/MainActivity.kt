@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        /*WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -44,6 +44,6 @@ class MainActivity : ComponentActivity() {
         if (dpm.isLockTaskPermitted(packageName)) {
             Log.d("Photo", "Starting in lock task mode")
             startLockTask()
-        }
+        }*/
     }
 }
