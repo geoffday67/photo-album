@@ -1,7 +1,9 @@
 package uk.co.sullenart.photoalbum.items
 
+import android.util.Log
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -78,6 +80,9 @@ class MediaItemsRepository(
                     delete(existing)
                 }
             }
+            /*
+            Or just sync the Realm records, then sync the downloaded images with that.
+             */
         }
     }
 
@@ -91,6 +96,7 @@ class MediaItemsRepository(
         sourceUrl: String,
         destinationPath: String,
     ): Boolean {
+        Timber.d("Saving to $destinationPath")
         var tries = 0
         while(true) {
             if (googlePhotos.saveMediaFile(sourceUrl, destinationPath)) {
@@ -100,6 +106,7 @@ class MediaItemsRepository(
                 Timber.w("Failed to save media file after re-tries")
                 return false
             }
+            delay(1000)
         }
     }
 

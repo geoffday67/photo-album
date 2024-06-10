@@ -50,7 +50,7 @@ fun ItemsScreen(
     if (viewModel.isDetail) {
         BackHandler(onBack = viewModel::onDetailBack)
         DetailContent(
-            pageCount = viewModel.itemCount,
+            pageCount = viewModel.items.size,
             initialPage = viewModel.currentIndex,
             getItemFromIndex = viewModel::getItemFromIndex,
             onRotationSelected = viewModel::setItemRotation,

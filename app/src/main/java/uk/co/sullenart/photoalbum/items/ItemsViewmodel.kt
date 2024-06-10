@@ -24,9 +24,6 @@ class ItemsViewmodel(
     var album by mutableStateOf(albumsRepository.getAlbum(albumId) ?: Album.EMPTY)
     var items by mutableStateOf<List<MediaItem>>(emptyList())
 
-    val itemCount: Int
-        get() = items.size
-
     init {
         viewModelScope.launch {
             itemsRepository.getItemFlowForAlbum(albumId).collect {

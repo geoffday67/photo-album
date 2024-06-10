@@ -3,6 +3,7 @@ package uk.co.sullenart.photoalbum.google
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
@@ -107,10 +108,10 @@ class GooglePhotos(
     suspend fun saveMediaFile(
         sourceUrl: String,
         destinationPath: String,
-    ): Boolean {
-        return try {
+    ): Boolean =
+        try {
             val request = Request.Builder()
-                .url(sourceUrl + "X")
+                .url(sourceUrl)
                 .build()
             val response = saveClient.newCall(request).executeAsync()
             if (!response.isSuccessful) {
@@ -126,8 +127,7 @@ class GooglePhotos(
             }
             true
         } catch (error: Exception) {
-            Timber.e(error)
+            Timber.e(error.message)
             false
         }
-    }
 }
