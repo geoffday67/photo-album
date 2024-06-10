@@ -1,15 +1,8 @@
 package uk.co.sullenart.photoalbum
 
-import android.app.admin.DevicePolicyManager
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.navigation.compose.rememberNavController
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.main.MainScreen
 import uk.co.sullenart.photoalbum.ui.theme.PhotoAlbumTheme
@@ -23,10 +16,8 @@ class MainActivity : ComponentActivity() {
         Timber.i("Screen size $width x $height")
 
         setContent {
-            val navController = rememberNavController()
-
             PhotoAlbumTheme {
-                MainScreen(navController)
+                MainScreen()
             }
         }
     }
@@ -34,7 +25,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        /*WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.systemBars())
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -44,6 +35,6 @@ class MainActivity : ComponentActivity() {
         if (dpm.isLockTaskPermitted(packageName)) {
             Log.d("Photo", "Starting in lock task mode")
             startLockTask()
-        }
+        }*/
     }
 }

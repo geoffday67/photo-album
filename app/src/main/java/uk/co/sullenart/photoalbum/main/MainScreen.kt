@@ -3,16 +3,14 @@ package uk.co.sullenart.photoalbum.main
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import uk.co.sullenart.photoalbum.albums.AlbumsScreen
 import uk.co.sullenart.photoalbum.items.ItemsScreen
 
 @Composable
-fun MainScreen(
-    navController: NavHostController,
-) {
+fun MainScreen() {
     /*Button(onClick = {
     try {
         val adminName = ComponentName(this@MainActivity, DeviceAdmin::class.java)
@@ -25,6 +23,8 @@ fun MainScreen(
 }) {
     Text("Lock task mode")
 }*/
+    val navController = rememberNavController()
+
     NavHost(
         navController = navController,
         startDestination = "albums",
