@@ -87,12 +87,30 @@ class MediaItemsRepository(
         return thumbExists && detailExists
     }
 
-    private suspend fun addToCache(item: MediaItem) {
-        googlePhotos.saveMediaFile(item.thumbnailUrl, itemUtils.getThumbnailFilename(item))
-        Timber.d("Thumbnail downloaded to [${itemUtils.getThumbnailFilename(item)}]")
+    private suspend fun saveMediaFileWithRetry(
+        sourceUrl: String,
+        destinationPath: String,
+    ): Boolean {
+        var tries = 0
+        while(true) {
+            if (googlePhotos.saveMediaFile(sourceUrl, destinationPath)) {
+                return true
+            }
+            if (++tries == 3) {
+                Timber.w("Failed to save media file after re-tries")
+                return false
+            }
+        }
+    }
 
-        googlePhotos.saveMediaFile(item.detailUrl, itemUtils.getDetailFilename(item))
-        Timber.d("Detail downloaded to [${itemUtils.getDetailFilename(item)}]")
+    private suspend fun addToCache(item: MediaItem) {
+        if (saveMediaFileWithRetry(item.thumbnailUrl, itemUtils.getThumbnailFilename(item))) {
+            Timber.d("Thumbnail downloaded to [${itemUtils.getThumbnailFilename(item)}]")
+        }
+
+        if (saveMediaFileWithRetry(item.detailUrl, itemUtils.getDetailFilename(item))) {
+            Timber.d("Detail downloaded to [${itemUtils.getDetailFilename(item)}]")
+        }
     }
 
     private fun removeFromCache(item: MediaItem) {
