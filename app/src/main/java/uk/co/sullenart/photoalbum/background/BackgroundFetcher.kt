@@ -1,6 +1,5 @@
 package uk.co.sullenart.photoalbum.background
 
-import kotlinx.coroutines.delay
 import timber.log.Timber
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 import uk.co.sullenart.photoalbum.google.GooglePhotos
@@ -11,14 +10,6 @@ class BackgroundFetcher(
     private val albumsRepository: AlbumsRepository,
     private val itemsRepository: MediaItemsRepository,
 ) {
-    suspend fun start() {
-        while (true) {
-            refresh()
-            // TODO Use WorkManager for scheduling updates.
-            delay(5000)
-        }
-    }
-
     suspend fun refresh(
         progress: ((total: Int, processed: Int) -> Unit)? = null,
     ) {
@@ -32,12 +23,16 @@ class BackgroundFetcher(
         val totalItems = albums.fold(0) { acc, element -> acc + element.itemCount }
         var itemsProcessed = 0
 
+        val allIds = mutableListOf<String>()
         albums.forEach { album ->
             val mediaForAlbum = googlePhotos.getMediaForAlbum(album)
-            itemsRepository.sync(album.id, mediaForAlbum) {
-                progress?.invoke(totalItems, ++itemsProcessed)
-            }
+            itemsRepository.upsert(mediaForAlbum)
+            itemsRepository.populateCache(album)
             Timber.d("Fetched ${mediaForAlbum.size} items for album ${album.title}")
+
+            allIds.addAll(mediaForAlbum.map { it.id })
         }
+
+        itemsRepository.prune(allIds)
     }
 }

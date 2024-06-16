@@ -78,6 +78,7 @@ fun SettingsScreen(
                     refresh = viewModel::refresh,
                 )
                 ClearButton(viewModel::clearData)
+                LockButton(viewModel::enableLockMode)
                 DialogButtons(onDismiss)
             }
         }
@@ -138,7 +139,27 @@ fun SettingsScreen(
         }
     }
 
-    @Composable
+@Composable
+private fun LockButton(
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Button(
+
+            modifier = Modifier
+                .widthIn(200.dp),
+            onClick = onClick
+        ) {
+            Text("Enable lock mode")
+        }
+    }
+}
+
+@Composable
     private fun Greeting(
         modifier: Modifier = Modifier,
     ) {

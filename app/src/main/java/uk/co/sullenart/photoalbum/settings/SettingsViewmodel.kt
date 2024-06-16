@@ -1,5 +1,8 @@
 package uk.co.sullenart.photoalbum.settings
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +13,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import timber.log.Timber
+import uk.co.sullenart.photoalbum.DeviceAdmin
 import uk.co.sullenart.photoalbum.albums.AlbumsRepository
 import uk.co.sullenart.photoalbum.auth.Auth
 import uk.co.sullenart.photoalbum.auth.UserRepository
@@ -22,7 +29,7 @@ class SettingsViewmodel(
     private val backgroundFetcher: BackgroundFetcher,
     private val photosRepository: MediaItemsRepository,
     private val albumsRepository: AlbumsRepository,
-) : ViewModel() {
+) : ViewModel(), KoinComponent {
     val userFlow = userRepository.userFlow
     var loading by mutableStateOf(false)
     var totalPhotos by mutableIntStateOf(0)
@@ -68,6 +75,18 @@ class SettingsViewmodel(
             albumsRepository.clear()
         }
         photosRepository.clearCaches()
+    }
+
+    fun enableLockMode() {
+        try {
+            val context: Context = get()
+            val adminName = ComponentName(context, DeviceAdmin::class.java)
+            val dpm = context.getSystemService(DevicePolicyManager::class.java)
+            dpm.setLockTaskPackages(adminName, arrayOf(context.packageName))
+            Timber.d("Lock task mode enabled")
+        } catch (e: Exception) {
+            Timber.e(e, "Error enabling lock task mode")
+        }
     }
 
     companion object {
