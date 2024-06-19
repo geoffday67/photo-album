@@ -1,8 +1,12 @@
 package uk.co.sullenart.photoalbum.settings
 
 import android.app.admin.DevicePolicyManager
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,12 +38,26 @@ class SettingsViewmodel(
     var loading by mutableStateOf(false)
     var totalPhotos by mutableIntStateOf(0)
     var processedPhotos by mutableIntStateOf(0)
+    var batteryLevel by mutableIntStateOf(0)
 
     val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
         .requestServerAuthCode(CLIENT_ID, true)
         .requestScopes(Scope(SCOPE))
         .build()
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            batteryLevel = level * 100 / scale
+        }
+    }
+
+    init {
+        val context: Context = get()
+        context.registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    }
 
     fun completeAuth(account: GoogleSignInAccount) {
         viewModelScope.launch {
