@@ -2,7 +2,7 @@ name: Development workflow
 on:
   pull_request:
     branches:
-      - gha-devx
+      - gha-dev
 jobs:
   hello:
     runs-on: ubuntu-latest
