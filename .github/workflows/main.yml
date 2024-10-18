@@ -1,14 +1,13 @@
-name: 'Geoff test'
-on: [workflow_dispatch]
+name: learn-github-actions
+run-name: ${{ github.actor }} is learning GitHub Actions
+on: [push]
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
-        - name: Print a greeting
-        env:
-          MY_VAR: Hi there! My name is
-          FIRST_NAME: Mona
-          MIDDLE_NAME: The
-          LAST_NAME: Octocat
-        run: |
-          echo $MY_VAR $FIRST_NAME $MIDDLE_NAME $LAST_NAME.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install -g bats
+      - run: bats -v
