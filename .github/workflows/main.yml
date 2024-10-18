@@ -1,4 +1,4 @@
-name: Say hello
+name: Private workflow
 on: [workflow_dispatch]
 jobs:
   hello:
