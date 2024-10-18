@@ -1,4 +1,4 @@
-name: Private workflow
+name: Say hello
 on: [workflow_dispatch]
 jobs:
   hello:
@@ -7,4 +7,4 @@ jobs:
       - name: Hello step
         shell: bash
         run: |
-          echo "Message just for me"
+          echo "Geoff is great!"
