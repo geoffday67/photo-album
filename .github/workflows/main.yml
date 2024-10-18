@@ -7,4 +7,4 @@ jobs:
       - name: Hello step
         shell: bash
         run: |
-          echo "Geoff is great!"
+          echo "Message just for me"
