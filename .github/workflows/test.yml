@@ -1,5 +1,8 @@
 name: Development workflow
-on: [pull_request]
+on:
+  pull_request:
+    branches:
+      - gha-devx
 jobs:
   hello:
     runs-on: ubuntu-latest
