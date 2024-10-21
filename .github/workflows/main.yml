@@ -1,4 +1,4 @@
-name: Say hello
+name: Create report
 on: [workflow_dispatch]
 jobs:
   hello:
@@ -7,4 +7,7 @@ jobs:
       - name: Hello step
         shell: bash
         run: |
-          echo "Geoff is great!"
+          echo "Make test report"
+          
+      - name: Test Reporter
+        uses: dorny/test-reporter@v1.9.1
