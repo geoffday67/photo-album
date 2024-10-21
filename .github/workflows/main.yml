@@ -10,12 +10,12 @@ jobs:
           echo "<testsuites>" > phrase-report.xml
           echo "  <testsuite>" >> phrase-report.xml
           echo "  </testsuite>" >> phrase-report.xml
-          echo "  </testsuites>" >> phrase-report.xml
+          echo "</testsuites>" >> phrase-report.xml
           cat phrase-report.xml
           
       - name: Test Reporter
         uses: dorny/test-reporter@v1.9.1
         with:
           name: Phrase check
-          artifact: phrase-report.xml
+          path: /phrase-report.xml
           reporter: java-junit
