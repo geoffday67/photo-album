@@ -4,10 +4,18 @@ jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
-      - name: Hello step
+      - name: Run the check
         shell: bash
         run: |
-          echo "Make test report"
+          echo "<testsuites>" > phrase-report.xml
+          echo "  <testsuite>" >> phrase-report.xml
+          echo "  </testsuite>" >> phrase-report.xml
+          echo "  </testsuites>" >> phrase-report.xml
+          cat phrase-report.xml
           
       - name: Test Reporter
         uses: dorny/test-reporter@v1.9.1
+        with:
+          name: Phrase check
+          artifact: phrase-report.xml
+          reporter: java-junit
