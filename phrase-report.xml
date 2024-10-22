@@ -1,5 +1,4 @@
-<testsuites>
-  <testsuite>
-    <testcase name=phrase-check" />
-  </testsuite>
-</testsuites>
+<testsuite name="Phrase check" tests="2" failures="0">
+  <testcase name="Plurals"/>
+  <testcase name="Data type"/>
+</testsuite>
