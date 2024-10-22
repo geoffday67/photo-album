@@ -16,7 +16,7 @@ jobs:
           echo "<testsuites>" > phrase-report.xml
           echo "  <testsuite>" >> phrase-report.xml
           echo "  <testsuite>" >> phrase-report.xml
-          echo "    <testcase name="Check phrase" />" >> phrase-report.xml
+          echo "    <testcase name=\"Check phrase\" />" >> phrase-report.xml
           echo "  </testsuite>" >> phrase-report.xml
           echo "</testsuites>" >> phrase-report.xml
           cat phrase-report.xml
