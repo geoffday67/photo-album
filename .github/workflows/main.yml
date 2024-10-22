@@ -3,10 +3,13 @@ on: [workflow_dispatch]
 permissions:
   contents: read
   actions: read
+  checks: write
 jobs:
-  hello:
+  phrase:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+    
       - name: Run the check
         shell: bash
         run: |
