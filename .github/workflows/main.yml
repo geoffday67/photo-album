@@ -19,4 +19,4 @@ jobs:
           name: Phrase check
           path: /phrase-report.xml
           reporter: java-junit
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: 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
