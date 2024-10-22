@@ -1,5 +1,8 @@
 name: Create report
 on: [workflow_dispatch]
+permissions:
+  contents: read
+  actions: read
 jobs:
   hello:
     runs-on: ubuntu-latest
