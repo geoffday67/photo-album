@@ -1,0 +1,28 @@
+name: Create report
+on: [workflow_dispatch]
+permissions:
+  contents: read
+  actions: read
+  checks: write
+jobs:
+  phrase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+    
+      - name: Run the check
+        shell: bash
+        run: |
+          echo "<testsuites>" > phrase-report.xml
+          echo "  <testsuite>" >> phrase-report.xml
+          echo "    <testcase name=\"Check phrase\" />" >> phrase-report.xml
+          echo "  </testsuite>" >> phrase-report.xml
+          echo "</testsuites>" >> phrase-report.xml
+          cat phrase-report.xml
+          
+      - name: Test Reporter
+        uses: dorny/test-reporter@v1.9.1
+        with:
+          name: Phrase check
+          path: phrase-report.xml
+          reporter: java-junit

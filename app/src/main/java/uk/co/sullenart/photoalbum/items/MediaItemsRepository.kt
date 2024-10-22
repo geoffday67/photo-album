@@ -2,10 +2,12 @@ package uk.co.sullenart.photoalbum.items
 
 import io.realm.kotlin.Realm
 import io.realm.kotlin.ext.query
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import uk.co.sullenart.photoalbum.albums.Album
 import uk.co.sullenart.photoalbum.google.GooglePhotos
 import java.io.File
 
@@ -18,9 +20,6 @@ class MediaItemsRepository(
         realm.query<RealmItem>("albumId == $0", albumId).asFlow().map {
             it.list.mapNotNull { it.toMediaItem() }
         }
-
-    fun getCountForAlbum(albumId: String): Int =
-        realm.query<RealmItem>("albumId == $0", albumId).count().find().toInt()
 
     suspend fun clear() {
         realm.write {
@@ -37,46 +36,65 @@ class MediaItemsRepository(
         return newItem
     }
 
-    suspend fun sync(
-        albumId: String,
-        items: List<MediaItem>,
-        progress: (() -> Unit)? = null,
+    suspend fun populateCache(
+        album: Album,
     ) {
-        realm.write {
-            items.forEach { item ->
-                // Is there a current record for this photo?
-                val result = query<RealmItem>("id == $0 AND albumId == $1", item.id, albumId).first().find()
-                if (result == null) {
-                    // No, create a new record.
-                    Timber.d("Media item not found, new record created [${item.id}]")
+        // For each media item in Realm for this album...
+        realm.query<RealmItem>("albumId == $0", album.id).find()
+            .map { it.toMediaItem() }
+            .filterNotNull()
+            .forEach { item ->
+                // If it's not in the cache then add it.
+                if (!isInCache(item)) {
                     runBlocking {
                         addToCache(item)
                     }
+                }
+            }
+    }
+
+    suspend fun upsert(
+        items: List<MediaItem>,
+    ) {
+        realm.write {
+            items.forEach { item ->
+                // Is there a current record for this item?
+                val result = query<RealmItem>("id == $0", item.id).first().find()
+                if (result == null) {
+                    // No, create a new record.
                     copyToRealm(item.toRealmItem())
+                    Timber.d("Media item not found, new record created [${item.id}]")
                 } else {
                     // Yes, update its properties, Realm will update the persisted record once outside the "write" scope.
-                    // The "item" has come from the remote API - retain properties like rotation that are
-                    Timber.d("Media record updated [${item.id}]")
-                    if (!isInCache(item)) {
-                        runBlocking {
-                            addToCache(item)
-                        }
-                    }
+                    // The "item" has come from the remote API - retain properties like rotation that are local.
                     result.copyFromItem(item, except = setOf(result::rotation))
+                    Timber.d("Media record updated [${item.id}]")
                 }
-                progress?.invoke()
             }
+        }
+    }
 
-            // Remove photos that we have locally but which aren't in the list.
-            val newIds = items.map { it.id }
-            query<RealmItem>("albumId == $0", albumId).find().forEach { existing ->
-                if (!newIds.contains(existing.id)) {
-                    Timber.d("Deleting record [${existing.id}]")
-                    existing.toMediaItem()?.let {
-                        removeFromCache(it)
-                    }
-                    delete(existing)
+    suspend fun prune(
+        keep: List<String>,
+    ) {
+        val forDeletion = realm.query<RealmItem>().find()
+            .map { it.id }
+            .filterNot { it in keep }
+
+        realm.write {
+            forDeletion.forEach {
+                Timber.d("Deleting record [${it}]")
+                query<RealmItem>("id == $0", it).first().find()?.let {
+                    delete(it)
                 }
+            }
+        }
+
+        File(itemUtils.getMediaPath()).listFiles()?.forEach { file ->
+            val id = file.name.replaceAfterLast('-', "").dropLast(1)
+            if (id !in keep) {
+                file.delete()
+                Timber.d("Media file deleted [${file.name}]")
             }
         }
     }
@@ -92,7 +110,7 @@ class MediaItemsRepository(
         destinationPath: String,
     ): Boolean {
         var tries = 0
-        while(true) {
+        while (true) {
             if (googlePhotos.saveMediaFile(sourceUrl, destinationPath)) {
                 return true
             }
@@ -100,6 +118,7 @@ class MediaItemsRepository(
                 Timber.w("Failed to save media file after re-tries")
                 return false
             }
+            delay(1000)
         }
     }
 

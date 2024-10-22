@@ -62,6 +62,9 @@ fun SettingsScreen(
                     modifier = Modifier
                         .padding(bottom = dimensionResource(R.dimen.paddingM)),
                 )
+                Battery(
+                    level = viewModel.batteryLevel,
+                )
                 if (user != null) {
                     UserDetails(
                         modifier = Modifier
@@ -78,6 +81,7 @@ fun SettingsScreen(
                     refresh = viewModel::refresh,
                 )
                 ClearButton(viewModel::clearData)
+                LockButton(viewModel::enableLockMode)
                 DialogButtons(onDismiss)
             }
         }
@@ -101,134 +105,161 @@ fun SettingsScreen(
     }
 }
 
-    @Composable
-    private fun DialogButtons(
-        onDismiss: () -> Unit,
+@Composable
+private fun Battery(
+    level: Int,
+) {
+    Text("${stringResource(R.string.battery)} $level%")
+}
+
+@Composable
+private fun DialogButtons(
+    onDismiss: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
     ) {
-        Row(
+        TextButton(
+            onClick = onDismiss,
+        ) {
+            Text("Close")
+        }
+    }
+}
+
+@Composable
+private fun ClearButton(
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Button(
+
             modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+                .widthIn(200.dp),
+            onClick = onClick
         ) {
-            TextButton(
-                onClick = onDismiss,
-            ) {
-                Text("Close")
-            }
+            Text("Clear data")
         }
     }
+}
 
-    @Composable
-    private fun ClearButton(
-        onClick: () -> Unit,
+@Composable
+private fun LockButton(
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
+        Button(
+
             modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .widthIn(200.dp),
+            onClick = onClick
         ) {
-            Button(
-
-                modifier = Modifier
-                    .widthIn(200.dp),
-                onClick = onClick
-            ) {
-                Text("Clear data")
-            }
+            Text("Enable lock mode")
         }
     }
+}
 
-    @Composable
-    private fun Greeting(
-        modifier: Modifier = Modifier,
+@Composable
+private fun Greeting(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = "Welcome",
-                style = MaterialTheme.typography.headlineLarge,
-            )
-        }
+        Text(
+            text = "Welcome",
+            style = MaterialTheme.typography.headlineLarge,
+        )
     }
+}
 
-    @Composable
-    private fun UserDetails(
-        modifier: Modifier = Modifier,
-        name: String,
-        email: String,
+@Composable
+private fun UserDetails(
+    modifier: Modifier = Modifier,
+    name: String,
+    email: String,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleLarge,
-            )
-            Text(
-                text = email,
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
+        Text(
+            text = name,
+            style = MaterialTheme.typography.titleLarge,
+        )
+        Text(
+            text = email,
+            style = MaterialTheme.typography.titleMedium,
+        )
     }
+}
 
-    @Composable
-    private fun AuthButtons(
-        signInOptions: GoogleSignInOptions,
-        completeAuth: (GoogleSignInAccount) -> Unit,
-        signOut: () -> Unit,
-        refresh: () -> Unit,
-        isSignedIn: Boolean,
+@Composable
+private fun AuthButtons(
+    signInOptions: GoogleSignInOptions,
+    completeAuth: (GoogleSignInAccount) -> Unit,
+    signOut: () -> Unit,
+    refresh: () -> Unit,
+    isSignedIn: Boolean,
+) {
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        // TODO Check for error
+        val account: GoogleSignInAccount = GoogleSignIn.getSignedInAccountFromIntent(it.data).result
+        completeAuth(account)
+    }
+    val context = LocalContext.current
+    val client = remember { GoogleSignIn.getClient(context, signInOptions) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            // TODO Check for error
-            val account: GoogleSignInAccount = GoogleSignIn.getSignedInAccountFromIntent(it.data).result
-            completeAuth(account)
-        }
-        val context = LocalContext.current
-        val client = remember { GoogleSignIn.getClient(context, signInOptions) }
-
-        Column(
+        Button(
             modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .widthIn(200.dp),
+            onClick = {
+                val signInIntent = client.signInIntent
+                launcher.launch(signInIntent)
+            },
+            enabled = !isSignedIn,
         ) {
-            Button(
-                modifier = Modifier
-                    .widthIn(200.dp),
-                onClick = {
-                    val signInIntent = client.signInIntent
-                    launcher.launch(signInIntent)
-                },
-                enabled = !isSignedIn,
-            ) {
-                Text(stringResource(R.string.sign_in))
-            }
-            Button(
-                modifier = Modifier
-                    .widthIn(200.dp),
-                onClick = {
-                    client.signOut()
-                    signOut()
-                },
-                enabled = isSignedIn,
-            ) {
-                Text(stringResource(R.string.sign_out))
-            }
-            Button(
-                modifier = Modifier
-                    .widthIn(200.dp),
-                onClick = {
-                    client.signOut()
-                    refresh()
-                },
-                enabled = isSignedIn,
-            ) {
-                Text(stringResource(R.string.refresh))
-            }
+            Text(stringResource(R.string.sign_in))
+        }
+        Button(
+            modifier = Modifier
+                .widthIn(200.dp),
+            onClick = {
+                client.signOut()
+                signOut()
+            },
+            enabled = isSignedIn,
+        ) {
+            Text(stringResource(R.string.sign_out))
+        }
+        Button(
+            modifier = Modifier
+                .widthIn(200.dp),
+            onClick = {
+                client.signOut()
+                refresh()
+            },
+            enabled = isSignedIn,
+        ) {
+            Text(stringResource(R.string.refresh))
         }
     }
+}
