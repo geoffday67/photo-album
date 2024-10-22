@@ -23,6 +23,5 @@ jobs:
         uses: dorny/test-reporter@v1.9.1
         with:
           name: Phrase check
-          path: /phrase-report.xml
+          path: phrase-report.xml
           reporter: java-junit
-          token: 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
