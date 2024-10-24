@@ -1,4 +1,30 @@
 <testsuites>
+  <testsuite name="Wrong data type">
+  </testsuite>
+  <testsuite name="Missing plural">
+    <testcase name="geoff_plural_test">
+      <failure message="Oh dear" />
+    </testcase>
+    <testcase name="geoff_plural_test">
+      <failure message="Oh dear" />
+    </testcase>
+    <testcase name="geoff_plural_test">
+      <failure message="Oh dear" />
+    </testcase>
+  </testsuite>
+  <testsuite name="Invalid character">
+    <testcase name="geoff_hidden_char_test">
+      <failure message="Oh dear" />
+    </testcase>
+  </testsuite>
+  <testsuite name="Wrong ellipsis">
+    <testcase name="geoff_test">
+      <failure message="Oh dear" />
+    </testcase>
+    <testcase name="geoff_test">
+      <failure message="Oh dear" />
+    </testcase>
+  </testsuite>
   <testsuite name="Wrong apostrophe">
     <testcase name="geoff_plural_test">
       <failure message="Oh dear" />
@@ -10,7 +36,7 @@
       <failure message="Oh dear" />
     </testcase>
   </testsuite>
-  <testsuite name="Wrong ellipsis">
+  <testsuite name="Wrong quotation mark">
     <testcase name="geoff_test">
       <failure message="Oh dear" />
     </testcase>
