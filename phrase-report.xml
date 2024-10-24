@@ -3,7 +3,7 @@
   </testsuite>
   <testsuite name="Missing plural" tests="456">
     <testcase name="geoff_plural_test">
-      <failure>This is very bad!</failure>
+      <failure>Something went wrong!</failure>
     </testcase>
     <testcase name="geoff_plural_test">
       <failure message="Oh dear" />
