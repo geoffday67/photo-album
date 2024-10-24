@@ -1,9 +1,11 @@
 <testsuites>
-  <testsuite name="Wrong data type">
+  <testsuite name="Wrong data type" passed="123">
   </testsuite>
   <testsuite name="Missing plural">
     <testcase name="geoff_plural_test">
-      <failure message="Oh dear" />
+      <failure>
+        This is very bad!
+      </failure>
     </testcase>
     <testcase name="geoff_plural_test">
       <failure message="Oh dear" />
