@@ -1,70 +1,74 @@
 <testsuites>
-  <testsuite name="Wrong data type">
-  </testsuite>
-  <testsuite name="Missing plural">
-    <testcase name="geoff_plural_test">
-      <failure>
-        Missing plural "few" in Polish
-      </failure>
-    </testcase>
-    <testcase name="geoff_plural_test">
-      <failure>
-        Missing plural "many" in Polish
-      </failure>
-    </testcase>
-    <testcase name="geoff_plural_test">
-      <failure>
-        Missing plural "other" in Polish
-      </failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="Invalid character">
-    <testcase name="geoff_hidden_char_test">
-      <failure>
-        Invalid character 0x200E at position 61 in English
-      </failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="Wrong ellipsis">
-    <testcase name="geoff_test">
-      <failure>
-        Wrong ellipsis found at position 14 in English
-      </failure>
-    </testcase>
-    <testcase name="geoff_test">
-      <failure>
-        Wrong ellipsis found at position 45 in English
-      </failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="Wrong apostrophe">
-    <testcase name="geoff_plural_test">
-      <failure>
-        Wrong apostrophe found at position 6 in French
-      </failure>
-    </testcase>
-    <testcase name="geoff_test">
-      <failure>
-        Wrong apostrophe found at position 78 in English
-      </failure>
-    </testcase>
-    <testcase name="geoff_test">
-      <failure>
-        Wrong apostrophe found at position 84 in English
-      </failure>
-    </testcase>
-  </testsuite>
-  <testsuite name="Wrong quotation mark">
-    <testcase name="geoff_test">
-      <failure>
-        Wrong quotation mark found at position 115 in English
-      </failure>
-    </testcase>
-    <testcase name="geoff_test">
-      <failure>
-        Wrong quotation mark found at position 121 in English
-      </failure>
-    </testcase>
-  </testsuite>
+<testsuite name="Wrong data type">
+<testcase name="geoff_array_test">
+<failure>
+Content looks like an array but the type is "string"
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="Missing plural">
+<testcase name="geoff_plural_test">
+<failure>
+Missing plural "few" in Polish
+</failure>
+</testcase>
+<testcase name="geoff_plural_test">
+<failure>
+Missing plural "many" in Polish
+</failure>
+</testcase>
+<testcase name="geoff_plural_test">
+<failure>
+Missing plural "other" in Polish
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="Invalid character">
+<testcase name="geoff_hidden_char_test">
+<failure>
+Invalid character 0x200E at position 61 in English
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="Wrong ellipsis">
+<testcase name="geoff_test">
+<failure>
+Wrong ellipsis found at position 14 in English
+</failure>
+</testcase>
+<testcase name="geoff_test">
+<failure>
+Wrong ellipsis found at position 45 in English
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="Wrong apostrophe">
+<testcase name="geoff_plural_test">
+<failure>
+Wrong apostrophe found at position 6 in French
+</failure>
+</testcase>
+<testcase name="geoff_test">
+<failure>
+Wrong apostrophe found at position 78 in English
+</failure>
+</testcase>
+<testcase name="geoff_test">
+<failure>
+Wrong apostrophe found at position 84 in English
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="Wrong quotation mark">
+<testcase name="geoff_test">
+<failure>
+Wrong quotation mark found at position 115 in English
+</failure>
+</testcase>
+<testcase name="geoff_test">
+<failure>
+Wrong quotation mark found at position 121 in English
+</failure>
+</testcase>
+</testsuite>
 </testsuites>
-  
