@@ -1,5 +1,4 @@
 <testsuites>
   <testsuite name="Wrong data type" tests="1" failures="2" errors="3" skipped="4">
-    <testcase></testcase>
   </testsuite>
 </testsuites>
