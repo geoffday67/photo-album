@@ -1,12 +1,9 @@
 <testsuites>
 <testsuite name="Wrong data type">
 <testcase name="geoff_array_test">
-<failure>
+<failure message="Here is a failure message">
 Content looks like an array but the type is "string"
 </failure>
-<system-out>
-Here are the tags.
-</system-out>
 </testcase>
 </testsuite>
 <testsuite name="Missing plural">
