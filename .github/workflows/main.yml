@@ -1,9 +1,5 @@
 name: Create report
 on: [push]
-permissions:
-  contents: read
-  actions: read
-  checks: write
 jobs:
   phrase:
     runs-on: ubuntu-latest
