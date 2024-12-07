@@ -1,0 +1,10 @@
+name: Development workflow
+on: [pull_request]
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello step
+        shell: bash
+        run: |
+          echo "A message just for me"
